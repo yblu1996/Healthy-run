@@ -1859,12 +1859,13 @@ function renderReport(payload) {
     </div>`);
   }
 
-  // 复诊建议：不固定周数。每份计划按生成日重新锚定，若固定"第 N 周复诊"，
-  // 计划永远只执行到第 N 周就被新计划取代。唯一硬性要求是 8 周全部走完后必须复诊
+  // 复测建议：不固定周数。每份计划按生成日重新锚定，若固定"第 N 周复测"，
+  // 计划永远只执行到第 N 周就被新计划取代。唯一硬性要求是 8 周全部走完后必须复测
+  // （用"复测"不用"复诊"：本服务非医疗，"诊"字有医疗暗示，是健康类内容审核敏感点）
   html.push(`<div class="next-check">
-    <strong>何时再来复诊？</strong>
-    <p>不用卡固定周数：计划执行顺利时，建议在<b>下一个加量阶段或强度课开始前</b>上传新数据复诊；出现疼痛、持续疲劳、体重或生活节奏明显变化时，<b>随时上传重新诊断</b>，报告会以当天为起点重新生成计划。</p>
-    <p>8 周计划全部结束后，<b>请务必上传新数据复诊</b>，生成下一轮计划继续训练。</p>
+    <strong>何时再来复测？</strong>
+    <p>不用卡固定周数：计划执行顺利时，建议在<b>下一个加量阶段或强度课开始前</b>上传新数据复测；出现疼痛、持续疲劳、体重或生活节奏明显变化时，<b>随时上传重新评估</b>，报告会以当天为起点重新生成计划。</p>
+    <p>8 周计划全部结束后，<b>请务必上传新数据复测</b>，生成下一轮计划继续训练。</p>
   </div>`);
 
   body.innerHTML = html.join('');
@@ -2001,7 +2002,7 @@ async function buildWatermarkFooter() {
     </div>
     <div class="wm-codes">
       ${gzhOk ? side('qrcode-gzh.jpg', '公众号') : '<div class="wm-side"></div>'}
-      ${qr ? `<div class="wm-main"><img class="wm-qr" src="${qr}" alt="扫码体验"><span>小程序</span></div>` : '<div class="wm-side"></div>'}
+      ${qr ? `<div class="wm-main"><img class="wm-qr" src="${qr}" alt="扫码体验"><span>扫码体验</span></div>` : '<div class="wm-side"></div>'}
       ${sphOk ? side('qrcode-sph-square.jpg', '视频号') : '<div class="wm-side"></div>'}
     </div>
   `;

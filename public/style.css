@@ -1003,6 +1003,8 @@ body {
 }
 .agree-row > span { flex: 1; }
 .agree-row a { color: var(--teal); }
+/* 注册页三项独立同意的容器：竖排堆叠 */
+.agree-col { display: flex; flex-direction: column; gap: 10px; }
 
 /* 诊断页那条是敏感个人信息的单独同意，加底框与普通说明文字区分开，
    避免被当成可看可不看的装饰文字直接略过 */

@@ -1,13 +1,9 @@
-node:events:486
-      throw er; // Unhandled 'error' event
-      ^
-
-Error: listen EADDRINUSE: address already in use :::3000
-    at Server.setupListenHandle [as _listen2] (node:net:1948:16)
-    at listenInCluster (node:net:2005:12)
-    at Server.listen (node:net:2110:7)
+[consent] user_consents 表不存在，请到 Supabase SQL Editor 重跑 sql/schema.sql
+[consent] user_consents 表不存在，请到 Supabase SQL Editor 重跑 sql/schema.sql
+[consent] user_consents 表不存在，请到 Supabase SQL Editor 重跑 sql/schema.sql
+e:net:2110:7)
     at app.listen (C:\Users\Lenovo\WorkBuddy\Healthy-run\node_modules\express\lib\application.js:635:24)
-    at Object.<anonymous> (C:\Users\Lenovo\WorkBuddy\Healthy-run\api\index.js:1161:7)
+    at Object.<anonymous> (C:\Users\Lenovo\WorkBuddy\Healthy-run\api\index.js:1200:7)
     at Module._compile (node:internal/modules/cjs/loader:1812:14)
     at Object..js (node:internal/modules/cjs/loader:1943:10)
     at Module.load (node:internal/modules/cjs/loader:1533:32)
