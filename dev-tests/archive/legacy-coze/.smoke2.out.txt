@@ -1,0 +1,3 @@
+register: 200 ok
+token: yes
+GET /api/records: 200 total=0

@@ -1,0 +1,4 @@
+before count=2
+del 13900000382 ok
+del 13900000688 ok
+after count=0

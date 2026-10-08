@@ -1,0 +1,7 @@
+测试用图片地址前缀: https://eqfiacrztkebfvugtwcs.supabase.co/storage/v1/object/p…
+[额度读取失败] e67c98e4-a789-4f9a-aee0-09f650655553 模拟读取失败
+
+=== 接口响应 ===
+HTTP 500 {"error":"网络异常，请稍后重试（本次未扣除诊断次数）"}
+
+判定： ✅ 未误报次数不足

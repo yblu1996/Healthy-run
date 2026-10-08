@@ -1,0 +1,14 @@
+[0] 0.7s 图片 10 张，goal=none，发起 streaming 请求
+[3.5s] ▶ 节点开始 开始 (start)
+[3.5s] ■ 节点结束 开始 status=succeeded elapsed=0.0s 输出6410B tokens=无
+[3.5s] ▶ 节点开始 识图 (llm)
+[15.8s] ■ 节点结束 识图 status=succeeded elapsed=12.3s 输出1577B tokens=无
+[16.2s] ▶ 节点开始 诊断计划 (llm)
+[79.0s] ■ 节点结束 诊断计划 status=succeeded elapsed=63.0s 输出7977B tokens=无
+[79.0s] ▶ 节点开始 结束 (end)
+[79.0s] ■ 节点结束 结束 status=succeeded elapsed=0.0s 输出8745B tokens=无
+
+[79.1s] ⛳ 工作流结束 status=succeeded 总耗时=75.6s
+    recognition: string len=1037 含think=false
+    diagnosis_result: string len=6613 含think=true
+总墙钟耗时: 80.1s

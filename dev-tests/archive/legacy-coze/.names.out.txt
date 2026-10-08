@@ -1,0 +1,3 @@
+小写 image1: input=1445 code=0
+大写 Image1: input=1440 code=0
+全大写 IMAGE1: input=1442 code=0

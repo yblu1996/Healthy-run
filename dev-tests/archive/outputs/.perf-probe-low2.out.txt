@@ -1,0 +1,14 @@
+[0] 0.8s 图片 6 张，goal=half_marathon，发起 streaming 请求
+[2.6s] ▶ 节点开始 开始 (start)
+[2.6s] ■ 节点结束 开始 status=succeeded elapsed=0.0s 输出3994B tokens=无
+[2.7s] ▶ 节点开始 识图 (llm)
+[15.3s] ■ 节点结束 识图 status=succeeded elapsed=12.7s 输出1073B tokens=无
+[15.5s] ▶ 节点开始 诊断计划 (llm)
+[94.6s] ■ 节点结束 诊断计划 status=succeeded elapsed=79.2s 输出7404B tokens=无
+[94.7s] ▶ 节点开始 结束 (end)
+[94.7s] ■ 节点结束 结束 status=succeeded elapsed=0.0s 输出7666B tokens=无
+
+[94.7s] ⛳ 工作流结束 status=succeeded 总耗时=92.1s
+    recognition: string len=600 含think=true
+    diagnosis_result: string len=6143 含think=true
+总墙钟耗时: 95.7s

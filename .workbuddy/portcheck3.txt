@@ -1,0 +1,29 @@
+﻿=== .pm2 dir ===
+
+Name             Length LastWriteTime     
+----             ------ -------------     
+logs                    2026/9/21 8:24:23 
+modules                 2026/9/20 13:03:01
+pids                    2026/9/21 20:47:27
+dump.pm2         84441  2026/9/21 14:05:44
+dump.pm2.bak     52105  2026/9/21 14:05:44
+module_conf.json 2      2026/9/20 13:03:01
+pm2.log          971495 2026/9/21 20:47:27
+pm2.pid          5      2026/9/21 13:13:45
+touch            13     2026/9/20 13:03:01
+
+
+=== dump.pm2 exists ===
+True
+=== as-naming-out.log tail ===
+銆愬鍚嶅瘑鐮?路 缃戦〉鐗堛€戝凡鍚姩锛?http://localhost:8888
+銆愬鍚嶅瘑鐮?路 缃戦〉鐗堛€戝凡鍚姩锛?http://localhost:3210
+銆愬鍚嶅瘑鐮?路 缃戦〉鐗堛€戝凡鍚姩锛?http://localhost:3000
+銆愬鍚嶅瘑鐮?路 缃戦〉鐗堛€戝凡鍚姩锛?http://localhost:8080
+=== health-app restarts in log ===
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}
+=== DONE ===

@@ -1,0 +1,126 @@
+/* 法律文本页共用样式（用户服务协议 / 隐私政策 / 免责声明）
+   独立于 style.css：这些页面要能被单独链接、单独分享、单独打印给律师看，
+   所以不依赖主应用的任何样式与脚本。 */
+
+:root {
+  --teal: #0F6E56;
+  --teal-dark: #085041;
+  --teal-light: #E1F5EE;
+  --bg: #F6F8F7;
+  --card: #FFFFFF;
+  --text: #1F2421;
+  --text-body: #2E3531;
+  --text-secondary: #5F615E;
+  --text-tertiary: #8A8D88;
+  --border: #E4E8E5;
+  --red: #C0392B;
+  --red-bg: #FDECEA;
+  --red-text: #7A2419;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+.legal-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.legal-back { color: var(--teal); text-decoration: none; font-size: 14px; white-space: nowrap; }
+.legal-back:hover { text-decoration: underline; }
+.legal-brand { margin-left: auto; font-size: 13px; color: var(--text-tertiary); white-space: nowrap; }
+
+.legal-doc { max-width: 760px; margin: 0 auto; padding: 28px 20px 8px; }
+
+.legal-doc h1 { font-size: 22px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; }
+.legal-meta { font-size: 13px; color: var(--text-tertiary); margin-bottom: 4px; }
+
+.legal-doc h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 30px 0 10px;
+  padding-left: 10px;
+  border-left: 3px solid var(--teal);
+  line-height: 1.5;
+}
+.legal-doc h3 { font-size: 14.5px; font-weight: 600; margin: 18px 0 6px; }
+.legal-doc p { margin-bottom: 10px; color: var(--text-body); }
+.legal-doc ul, .legal-doc ol { margin: 0 0 12px 22px; }
+.legal-doc li { margin-bottom: 6px; color: var(--text-body); }
+.legal-doc strong { font-weight: 600; color: var(--text); }
+.legal-doc a { color: var(--teal); }
+.legal-doc code {
+  font-size: 13px;
+  background: #EFF3F1;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* 红线提示块：免责声明里的"立即就医"信号、隐私政策里的敏感信息提示都用它 */
+.legal-warn {
+  background: var(--red-bg);
+  border-left: 3px solid var(--red);
+  padding: 14px 16px;
+  border-radius: 0 10px 10px 0;
+  margin: 16px 0;
+}
+.legal-warn p { margin: 0; color: var(--red-text); }
+.legal-warn strong { color: var(--red); }
+
+.legal-note {
+  background: var(--teal-light);
+  border-left: 3px solid var(--teal);
+  padding: 14px 16px;
+  border-radius: 0 10px 10px 0;
+  margin: 16px 0;
+}
+.legal-note p { margin: 0; color: var(--teal-dark); }
+
+.legal-table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13.5px; }
+.legal-table th, .legal-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--text-body);
+  line-height: 1.6;
+}
+.legal-table th { background: #F1F5F3; font-weight: 600; color: var(--text); }
+
+.legal-related { margin: 28px 0 0; padding-top: 18px; border-top: 1px solid var(--border); font-size: 14px; }
+.legal-related a { color: var(--teal); }
+
+.legal-foot {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  color: var(--text-tertiary);
+  font-size: 12.5px;
+  text-align: center;
+  line-height: 1.7;
+}
+.legal-foot p { margin-bottom: 4px; }
+
+@media (max-width: 480px) {
+  body { font-size: 14.5px; }
+  .legal-doc h1 { font-size: 19px; }
+  .legal-doc h2 { font-size: 15.5px; }
+  .legal-doc { padding: 22px 16px 8px; }
+  .legal-foot { padding: 20px 16px 44px; }
+  .legal-table { font-size: 13px; }
+  .legal-table th, .legal-table td { padding: 6px 8px; }
+}

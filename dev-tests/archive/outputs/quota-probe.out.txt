@@ -1,0 +1,23 @@
+=== 用户（最近 50 条，命中真水无香则只显示命中）===
+id=e67c98e4-a789-4f9a-aee0-09f650655553 phone=18053390911 nick=真水无香 quota=87 (number) created=2026-09-17T10:36:21.905616+00:00
+
+=== 真水无香 最近 10 条记录 ===
+v16 done 2026-09-22T06:34:36.677363+00:00
+v15 failed 2026-09-22T03:35:14.202653+00:00
+v14 failed 2026-09-22T03:14:53.354654+00:00
+v13 done 2026-09-20T13:52:46.012118+00:00
+v12 done 2026-09-18T13:15:19.240307+00:00
+v11 done 2026-09-18T08:51:23.60402+00:00
+v10 done 2026-09-18T08:49:14.386249+00:00
+v9 done 2026-09-18T00:49:56.234512+00:00
+v8 failed 2026-09-18T00:32:19.247673+00:00
+v7 done 2026-09-18T00:27:17.821317+00:00
+C:\Users\Lenovo\WorkBuddy\Healthy-run\dev-tests\quota-probe.js:39
+  const { data: cols } = await supabase.rpc('to_jsonb', null).catch(() => ({ data: null }));
+                                                                   ^
+
+TypeError: supabase.rpc(...).catch is not a function
+    at C:\Users\Lenovo\WorkBuddy\Healthy-run\dev-tests\quota-probe.js:39:68
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+Node.js v22.22.2

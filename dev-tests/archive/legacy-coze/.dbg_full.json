@@ -1,0 +1,15 @@
+{
+  "execute_id": "7686739738280034330",
+  "detail": {
+    "logid": "202609181316461FC9BD975525079009E3"
+  },
+  "code": 0,
+  "msg": "",
+  "data": "{\"diagnosis_result\":\"{\\\"diagnosis\\\":[{\\\"advice\\\":\\\"建议补充以下信息后再提交咨询：1. 个人跑步基础（跑龄、每周跑步次数/距离、是否有伤痛）；2. 清晰可识别的跑步数据截图；3. 跑步相关目标（如健康跑、备赛等）\\\",\\\"evidence\\\":\\\"用户未提供跑龄、当前运动能力、伤痛情况、跑步目标等基础描述，上传的图片识别结果显示无有效可识别的跑步数据\\\",\\\"issue\\\":\\\"评估所需基础信息不足\\\",\\\"risk\\\":\\\"低\\\"}],\\\"next_check\\\":\\\"补充完整个人跑步基础信息、有效跑步数据后即可提交复诊\\\",\\\"plan_8_weeks\\\":[{\\\"focus\\\":\\\"数据不足暂无法制定训练计划\\\",\\\"note\\\":\\\"请先补充所需的基础信息及有效跑步数据后，再获取针对性8周训练计划\\\",\\\"runs\\\":[],\\\"week\\\":1,\\\"weekly_volume_km\\\":null}],\\\"progress\\\":{\\\"adjustment\\\":\\\"无足够基础数据，暂无法制定针对性调整方案\\\",\\\"improved\\\":[],\\\"prev_plan_completion\\\":\\\"无历史档案及过往训练计划记录，无法评估\\\",\\\"regressed\\\":[]},\\\"risk_alert\\\":null,\\\"summary\\\":\\\"因缺乏有效跑步数据及个人运动基础信息，暂无法完成跑步状态评估，请补充相关信息后再咨询\\\"}\",\"recognition\":\"{\\\"app_name\\\":null,\\\"form_observations\\\":[],\\\"image_error\\\":\\\"未提供有效可识别的图片内容，无法进行相关分析\\\",\\\"image_type\\\":\\\"unclear\\\",\\\"metrics\\\":{\\\"avg_heart_rate\\\":null,\\\"avg_pace_min_per_km\\\":null,\\\"cadence_spm\\\":null,\\\"distance_km\\\":null,\\\"duration_min\\\":null,\\\"elevation_gain_m\\\":null,\\\"max_heart_rate\\\":null,\\\"weekly_volume_km\\\":null}}\"}",
+  "debug_url": "https://www.coze.cn/work_flow?execute_id=7686739738280034330&space_id=7685985703905263631&workflow_id=7686037587228016667&execute_mode=2",
+  "usage": {
+    "token_count": 3705,
+    "output_count": 2256,
+    "input_count": 1449
+  }
+}

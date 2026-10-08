@@ -1,0 +1,92 @@
+app:
+  description: minimal text LLM test
+  icon: "\U0001F9EA"
+  icon_background: '#E0F2FE'
+  mode: workflow
+  name: text-test
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.4.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features: {}
+  graph:
+    edges:
+    - data: {isInIteration: false, sourceType: start, targetType: llm}
+      id: e1
+      source: s1
+      sourceHandle: source
+      target: l1
+      type: custom
+      zIndex: 0
+    - data: {isInIteration: false, sourceType: llm, targetType: end}
+      id: e2
+      source: l1
+      sourceHandle: source
+      target: e1x
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: "\u5F00\u59CB"
+        type: start
+        variables:
+        - label: q
+          max_length: 500
+          options: []
+          required: true
+          type: text-input
+          variable: q
+      height: 90
+      id: s1
+      position: {x: 60, y: 280}
+      positionAbsolute: {x: 60, y: 280}
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context: {enabled: false, variable_selector: []}
+        desc: ''
+        model:
+          completion_params: {temperature: 0.3}
+          mode: chat
+          name: glm-5.3-flash
+          provider: langgenius/zhipuai/zhipuai
+        prompt_template:
+        - id: u1
+          role: user
+          text: "{{#s1.q#}}"
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision: {enabled: false}
+      height: 98
+      id: l1
+      position: {x: 380, y: 280}
+      positionAbsolute: {x: 380, y: 280}
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector: [l1, text]
+          variable: out
+        selected: false
+        title: "\u7ED3\u675F"
+        type: end
+      height: 90
+      id: e1x
+      position: {x: 700, y: 280}
+      positionAbsolute: {x: 700, y: 280}
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+  viewport: {x: 0, y: 0, zoom: 0.7}

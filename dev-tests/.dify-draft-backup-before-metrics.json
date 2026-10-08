@@ -1,0 +1,352 @@
+{
+  "id": "c21bf54f-b52f-4393-a469-75f2a2cb63f8",
+  "graph": {
+    "nodes": [
+      {
+        "data": {
+          "desc": "5 个输入变量：user_text / goal / race_date / history / images（文件列表）",
+          "selected": false,
+          "title": "开始",
+          "type": "start",
+          "variables": [
+            {
+              "label": "user_text",
+              "max_length": 8000,
+              "options": [],
+              "required": true,
+              "type": "paragraph",
+              "variable": "user_text"
+            },
+            {
+              "label": "goal",
+              "max_length": 48,
+              "options": [],
+              "required": true,
+              "type": "text-input",
+              "variable": "goal"
+            },
+            {
+              "label": "race_date",
+              "max_length": 32,
+              "options": [],
+              "required": false,
+              "type": "text-input",
+              "variable": "race_date"
+            },
+            {
+              "label": "history",
+              "max_length": 100000,
+              "options": [],
+              "required": false,
+              "type": "paragraph",
+              "variable": "history"
+            },
+            {
+              "allowed_file_extensions": [],
+              "allowed_file_types": [
+                "image"
+              ],
+              "allowed_file_upload_methods": [
+                "local_file",
+                "remote_url"
+              ],
+              "label": "images",
+              "max_length": 10,
+              "options": [],
+              "required": false,
+              "type": "file-list",
+              "variable": "images"
+            }
+          ]
+        },
+        "height": 271,
+        "id": "start_1",
+        "position": {
+          "x": 60,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 60,
+          "y": 280
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 242
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "desc": "识别跑步 App 截图 / 跑姿照片，输出结构化 JSON",
+          "model": {
+            "completion_params": {
+              "temperature": 0,
+              "reasoning_effort": "low"
+            },
+            "mode": "chat",
+            "name": "glm-5.3-flash",
+            "provider": "langgenius/zhipuai/zhipuai"
+          },
+          "prompt_template": [
+            {
+              "id": "vision-sys",
+              "role": "system",
+              "text": "你是一名跑步数据识别专家。任务是识别用户上传的一组跑步 App 截图或跑姿照片，输出结构化 JSON。\n\n规则：\n1. 如果是跑步 App 截图（佳明、华为运动健康、Keep、悦跑圈、Strava、Apple 健身等），提取所有图片中出现的字段：单次距离、平均配速、最快配速、平均心率、最大心率、步频、时长、累计跑量、海拔爬升。多张图是同一份训练数据的不同页面，合并成一份指标。没出现的字段一律填 null，绝对不要猜。\n2. 如果是跑姿照片，只观察能看到的：着地方式（脚跟/前脚掌/全脚掌）、落点相对重心的位置、躯干姿态（前倾/直立/后仰）、摆臂（是否过中线、幅度）、头部视线、肩膀是否紧张。看不到的部位写\"未观察到\"。\n3. 如果所有图片都不是跑步相关内容，或模糊到无法识别，image_type 填 unclear，并在 image_error 里说明原因。\n4. 只输出 JSON，不要任何解释、寒暄或格式说明，也不要用 ```json 代码围栏包裹。\n\n输出格式：\n{\n  \"image_type\": \"app_screenshot 或 form_photo 或 unclear\",\n  \"app_name\": \"App 名称，识别不出填 null\",\n  \"metrics\": {\n    \"distance_km\": null,\n    \"avg_pace_min_per_km\": null,\n    \"avg_heart_rate\": null,\n    \"max_heart_rate\": null,\n    \"cadence_spm\": null,\n    \"duration_min\": null,\n    \"weekly_volume_km\": null,\n    \"elevation_gain_m\": null\n  },\n  \"form_observations\": [\n    { \"part\": \"着地方式\", \"finding\": \"\", \"confidence\": \"高/中/低\" }\n  ],\n  \"image_error\": null\n}"
+            },
+            {
+              "id": "vision-user",
+              "role": "user",
+              "text": "识别这组跑步数据截图或跑姿照片。用户文字描述（含实际图片张数）：\n{{#start_1.user_text#}}"
+            }
+          ],
+          "selected": false,
+          "title": "识图",
+          "type": "llm",
+          "variables": [],
+          "vision": {
+            "configs": {
+              "detail": "high",
+              "variable_selector": [
+                "start_1",
+                "images"
+              ]
+            },
+            "enabled": true
+          }
+        },
+        "height": 130,
+        "id": "vision_1",
+        "position": {
+          "x": 380,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 380,
+          "y": 280
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 241
+      },
+      {
+        "data": {
+          "context": {
+            "enabled": false,
+            "variable_selector": []
+          },
+          "desc": "根据识图结果与用户信息输出诊断报告与 8 周计划 JSON",
+          "model": {
+            "completion_params": {
+              "max_tokens": 9901,
+              "reasoning_effort": "low"
+            },
+            "mode": "chat",
+            "name": "glm-5.3-flash",
+            "provider": "langgenius/zhipuai/zhipuai"
+          },
+          "prompt_template": [
+            {
+              "id": "diag-sys",
+              "role": "system",
+              "text": "你是一名有 10 年执教经验的跑步教练，具备运动科学背景，专门服务大众健康跑者。你的任务是根据用户的跑步数据和描述，给出诊断报告和未来 8 周训练计划。\n\n必须遵守的原则：\n1. 每一条问题诊断都必须标注依据，说明它来自哪项数据或用户的哪句描述。没有依据的结论不要写。\n2. 信息不足时就写\"数据不足，建议补充 XX\"，绝对不要编造数据或下没有支撑的结论。\n3. 红线：遇到疑似损伤信号（关节持续疼痛、静息痛、肿胀、走路都疼等），必须把\"建议就医评估\"放在 risk_alert 最前面，且本周计划以休息和就医为主，不要用训练方案压过它。你不是医生，不下诊断，只做提醒。\n4. 训练安排遵守：周跑量递增不超过上周的 10%、80/20 强度分布（八成轻松跑、两成强度）、每周至少 1 天全休、力量训练每周 2 次。\n5. 计划必须可执行：大众跑者每周跑 3-4 次，每次训练写明心率区间或体感描述（\"能说短句的速度\"），不要堆专业术语。\n6. 如果提供了历史档案，必须做纵向对比：哪些指标改善了、哪些退步了、上一轮计划完成得怎么样，写在 progress 字段里。首次诊断（history 为空）时 progress 各字段写 null 或空数组。\n\n目标模式：当 goal 不是 none（即 health / half_marathon / full_marathon）时，切换到备战模式：\n- 先评估目标可行性：以用户当前数据，这个目标合理吗？是否过于激进？写在 goal_feasibility 里。\n- 计划改为周期化：基础期 → 强化期 → 巡航期 → 减量期 → 比赛周，按 race_date 倒推。\n- 增加 race_day_strategy 字段：比赛日配速与补给策略。\n- 初跑者首马，把\"安全完赛\"放在\"成绩\"前面。\ngoal 为 none 时输出健康跑模式，不带 goal_feasibility 和 race_day_strategy 字段。\n\n输出格式（不要输出 JSON 以外的内容，不要用 ```json 围栏包裹）：\n1) 基础字段（任何情况都必须输出）：\n{\n  \"risk_alert\": \"有损伤风险时写提醒，没有填 null\",\n  \"summary\": \"一句话总评，让用户立刻知道自己处于什么状态\",\n  \"diagnosis\": [\n    {\n      \"issue\": \"问题名称\",\n      \"evidence\": \"依据，来自数据或描述\",\n      \"risk\": \"高/中/低\",\n      \"advice\": \"具体改进建议\"\n    }\n  ],\n  \"progress\": {\n    \"improved\": [\"相比上次的改善\"],\n    \"regressed\": [\"相比上次的退步\"],\n    \"prev_plan_completion\": \"上一轮计划完成度评估\",\n    \"adjustment\": \"本次调整思路\"\n  },\n  \"plan_8_weeks\": [\n    {\n      \"week\": 1,\n      \"focus\": \"本周训练重点\",\n      \"weekly_volume_km\": 45,\n      \"runs\": [\n        { \"day\": \"周二\", \"type\": \"轻松跑\", \"detail\": \"5km，心率 140-150，能说短句的速度\" },\n        { \"day\": \"周四\", \"type\": \"轻松跑\", \"detail\": \"6km，同上\" },\n        { \"day\": \"周六\", \"type\": \"长距离慢跑\", \"detail\": \"10km，比平时慢 30 秒/公里\" },\n        { \"day\": \"周日\", \"type\": \"力量\", \"detail\": \"臀中肌 + 核心，20 分钟\" }\n      ],\n      \"note\": \"本周注意事项，疼痛立即停止并反馈\"\n    }\n  ],\n  \"next_check\": \"下次复诊建议（通常 4 周后重新上传数据）\"\n}\n2) 备战模式的额外字段：当 goal 不是 none 时，必须在上面同一个 JSON 对象里追加下面两个字段（与 next_check 同级），缺失视为不合格输出；goal 为 none 时不要输出这两个字段。\n{\n  \"goal_feasibility\": \"目标可行性评估：以当前数据看目标是否合理、是否激进、预计完赛区间\",\n  \"race_day_strategy\": \"比赛日配速与补给策略\"\n}"
+            },
+            {
+              "id": "diag-user",
+              "role": "user",
+              "text": "【用户描述与填报数据】\n{{#start_1.user_text#}}\n\n【跑步目标】{{#start_1.goal#}}（none=只想健康跑，health=提升健康/减脂，half_marathon=半程马拉松，full_marathon=全程马拉松）\n【目标比赛日期】{{#start_1.race_date#}}\n【历史档案】（JSON，空数组 [] 表示首次诊断）\n{{#start_1.history#}}\n\n【识图节点输出的识别结果】\n{{#vision_1.text#}}\n\n请按系统要求输出诊断报告与 8 周计划 JSON。"
+            }
+          ],
+          "selected": true,
+          "title": "诊断计划",
+          "type": "llm",
+          "variables": [],
+          "vision": {
+            "enabled": false
+          }
+        },
+        "height": 130,
+        "id": "diag_1",
+        "position": {
+          "x": 700,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 700,
+          "y": 280
+        },
+        "selected": true,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 241
+      },
+      {
+        "data": {
+          "desc": "双输出：recognition + diagnosis_result（名称必须一字不差）",
+          "outputs": [
+            {
+              "value_selector": [
+                "vision_1",
+                "text"
+              ],
+              "variable": "recognition"
+            },
+            {
+              "value_selector": [
+                "diag_1",
+                "text"
+              ],
+              "variable": "diagnosis_result"
+            }
+          ],
+          "selected": false,
+          "title": "结束",
+          "type": "end"
+        },
+        "height": 157,
+        "id": "end_1",
+        "position": {
+          "x": 1020,
+          "y": 280
+        },
+        "positionAbsolute": {
+          "x": 1020,
+          "y": 280
+        },
+        "selected": false,
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "type": "custom",
+        "width": 241
+      }
+    ],
+    "edges": [
+      {
+        "data": {
+          "isInIteration": false,
+          "sourceType": "start",
+          "targetType": "llm"
+        },
+        "id": "edge_start_vision",
+        "source": "start_1",
+        "sourceHandle": "source",
+        "target": "vision_1",
+        "type": "custom",
+        "zIndex": 0,
+        "targetHandle": "target"
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "sourceType": "llm",
+          "targetType": "llm"
+        },
+        "id": "edge_vision_diag",
+        "source": "vision_1",
+        "sourceHandle": "source",
+        "target": "diag_1",
+        "type": "custom",
+        "zIndex": 0,
+        "targetHandle": "target"
+      },
+      {
+        "data": {
+          "isInIteration": false,
+          "sourceType": "llm",
+          "targetType": "end"
+        },
+        "id": "edge_diag_end",
+        "source": "diag_1",
+        "sourceHandle": "source",
+        "target": "end_1",
+        "type": "custom",
+        "zIndex": 0,
+        "targetHandle": "target"
+      }
+    ],
+    "viewport": {
+      "x": -539.9999961853027,
+      "y": -203.99999618530273,
+      "zoom": 2
+    }
+  },
+  "features": {
+    "opening_statement": "",
+    "suggested_questions": [],
+    "suggested_questions_after_answer": {
+      "enabled": false
+    },
+    "text_to_speech": {
+      "enabled": false,
+      "voice": "",
+      "language": ""
+    },
+    "speech_to_text": {
+      "enabled": false
+    },
+    "retriever_resource": {
+      "enabled": false
+    },
+    "sensitive_word_avoidance": {
+      "enabled": false
+    },
+    "file_upload": {
+      "image": {
+        "enabled": false,
+        "number_limits": 3,
+        "transfer_methods": [
+          "local_file",
+          "remote_url"
+        ]
+      },
+      "enabled": true,
+      "allowed_file_types": [
+        "image"
+      ],
+      "allowed_file_extensions": [],
+      "allowed_file_upload_methods": [
+        "local_file",
+        "remote_url"
+      ],
+      "number_limits": 10,
+      "fileUploadConfig": {
+        "file_size_limit": 15,
+        "batch_count_limit": 5,
+        "file_upload_limit": 20,
+        "image_file_size_limit": 10,
+        "video_file_size_limit": 100,
+        "audio_file_size_limit": 50,
+        "workflow_file_upload_limit": 10,
+        "image_file_batch_limit": 10,
+        "single_chunk_attachment_limit": 10,
+        "attachment_image_file_size_limit": 2
+      }
+    }
+  },
+  "hash": "272c20ea58993326fda8c1794d4c70d243a69ed9134f9fd2ead81f10f61fba46",
+  "version": "draft",
+  "marked_name": "",
+  "marked_comment": "",
+  "created_by": {
+    "id": "49032993-0926-4a79-83ff-8726719a98e3",
+    "name": "paowu-admin",
+    "email": "admin@paowu.local"
+  },
+  "created_at": 1789831222,
+  "updated_by": {
+    "id": "49032993-0926-4a79-83ff-8726719a98e3",
+    "name": "paowu-admin",
+    "email": "admin@paowu.local"
+  },
+  "updated_at": 1790171157,
+  "tool_published": false,
+  "environment_variables": [],
+  "conversation_variables": [],
+  "rag_pipeline_variables": []
+}

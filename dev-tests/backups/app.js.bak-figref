@@ -1,0 +1,1882 @@
+const API = '/api';
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+const MAX_IMAGES = 10;
+
+const state = {
+  token: localStorage.getItem('token') || '',
+  user: null,
+  images: [],
+  diagnosing: false,
+  authMode: 'login',
+  plan: [],
+  planIdx: 0,
+};
+
+const GOAL_TEXT = {
+  none: '健康跑',
+  health: '健康/减脂',
+  half_marathon: '半程马拉松',
+  full_marathon: '全程马拉松',
+};
+
+// 目标徽章：四个目标各自配色，首页统计卡与历史列表共用
+const GOAL_STYLE = {
+  none: 'goal-none',
+  health: 'goal-health',
+  half_marathon: 'goal-half',
+  full_marathon: 'goal-full',
+};
+function goalBadge(goal) {
+  const text = GOAL_TEXT[goal] || '健康跑';
+  const cls = GOAL_STYLE[goal] || GOAL_STYLE.none;
+  return `<span class="goal-tag ${cls}">${esc(text)}</span>`;
+}
+
+// 模块级 HTML 转义，所有渲染函数共用（此前定义在 renderReport 内部导致历史页报 esc is not defined）
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function showToast(msg, isError) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#B3402F' : '#2C2C2A';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ---------- 网络层：401 自动登出 + 请求超时 ----------
+// 诊断接口走 Dify 全链路通常 3-5 分钟；普通接口 30 秒
+async function request(path, { method = 'POST', body, isForm = false, timeoutMs } = {}) {
+  const opts = { method, headers: {} };
+  if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+  if (!isForm) opts.headers['Content-Type'] = 'application/json';
+  if (body !== undefined) opts.body = isForm ? body : JSON.stringify(body);
+
+  // high 档实测全链路 ~3 分钟（识图 ~20s + 诊断计划 ~150s），排队时可拖到数分钟；后端硬上限 15 分钟。
+  // 前端窗口要大于后端，否则后端还没报超时、前端先放弃，用户看到的就不是服务器给的准确原因。
+  const tms = timeoutMs || (path.startsWith('/diagnose') ? 960000 : 30000);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), tms);
+  let res;
+  try {
+    res = await fetch(API + path, { ...opts, signal: controller.signal });
+  } catch (e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') {
+      throw Object.assign(
+        new Error(path.startsWith('/diagnose')
+          ? '分析超时：AI 生成 8 周计划通常需要 3-5 分钟，本次未在 16 分钟内完成。记录已保留在历史中，请稍后到历史记录查看结果，或减少图片后重试'
+          : '请求超时，请检查网络后重试'),
+        { data: {} }
+      );
+    }
+    throw Object.assign(new Error('网络异常，请检查网络后重试'), { data: {} });
+  }
+  clearTimeout(timer);
+
+  let data = {};
+  try { data = await res.json(); } catch (e) { data = {}; }
+  if (res.status === 401) {
+    showToast('登录已过期，请重新登录', true);
+    logout();
+    throw Object.assign(new Error(data.error || '登录已过期，请重新登录'), { data });
+  }
+  if (!res.ok) throw Object.assign(new Error(data.error || '请求失败'), { data });
+  return data;
+}
+
+// ---------- 通用确认弹窗（替代原生 confirm） ----------
+function confirmDialog(message, { title = '请确认' } = {}) {
+  return new Promise((resolve) => {
+    const modal = $('#confirmModal');
+    $('#confirmTitle').textContent = title;
+    $('#confirmMessage').textContent = message;
+    modal.classList.remove('hidden');
+    const done = (val) => {
+      modal.classList.add('hidden');
+      $('#confirmOk').onclick = null;
+      $('#confirmCancel').onclick = null;
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') done(false); };
+    document.addEventListener('keydown', onKey);
+    $('#confirmOk').onclick = () => done(true);
+    $('#confirmCancel').onclick = () => done(false);
+  });
+}
+
+// ESC 关闭各弹窗/遮罩（确认弹窗的 ESC 由 confirmDialog 自己处理，这里只管其余）
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  $('#payModal').classList.add('hidden');
+  $('#shareOverlay').classList.add('hidden');
+  $('#feedbackModal').classList.add('hidden');
+  $('#followModal').classList.add('hidden');
+  $('#deleteAccountModal').classList.add('hidden');
+});
+
+// 各页面标题：切页时同步 document.title，分享/收藏/截图时能看到当前页
+const PAGE_TITLES = {
+  auth: '登录', home: 'AI 跑步诊断', diagnose: '数据诊断',
+  report: '诊断报告', history: '历史记录', learn: '学习园地', exit: '已退出',
+};
+// 页面在界面上的叫法（学习园地的返回按钮文字用它拼）
+const PAGE_NAMES = {
+  home: '首页', diagnose: '数据诊断', history: '历史记录',
+  report: '诊断报告', learn: '学习园地',
+};
+
+// 上一个视图：学习园地的返回按钮据此指回"进来之前那一页"，而不是固定回首页
+let prevView = 'home';
+
+function show(name) {
+  const cur = $('.view.active');
+  const curName = cur ? cur.id.replace('view-', '') : '';
+  if (curName && curName !== name && PAGE_NAMES[curName]) prevView = curName;
+  $$('.view').forEach((v) => v.classList.remove('active'));
+  $('#view-' + name).classList.add('active');
+  document.title = '跑悟 · ' + (PAGE_TITLES[name] || 'AI 跑步诊断');
+  // 底部导航高亮当前页
+  $$('#bottomnav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === name));
+  // 报告页/学习园地自带吸顶返回栏：移动端顶栏会换行成两行压住它，
+  // 这两个页面让顶栏随页面滚动、返回栏顶到 0（见 style.css 的 has-backbar 规则）
+  document.body.classList.toggle('has-backbar', name === 'report' || name === 'learn');
+  // 学习园地是从哪进来的就退回哪：从历史记录进来的返回历史记录，从首页进来的返回首页
+  if (name === 'learn') {
+    const back = $('#learnBack');
+    back.dataset.nav = prevView;
+    back.textContent = '← 返回' + PAGE_NAMES[prevView];
+  }
+  window.scrollTo(0, 0);
+}
+
+function setLogged(user) {
+  state.user = user;
+  $('#topnav').style.display = 'flex';
+  $('#bottomnav').classList.remove('hidden');
+  $('#quotaBadge').textContent = user.quota > 0 ? `剩余 ${user.quota} 次` : '次数已用完';
+  // 顶部账号信息条：手机号脱敏（138****1234）。
+  // 头像用固定图标而不是昵称首字——首字会和后面的昵称连读成"一 一缕春风"，看起来像多打了一个字
+  const masked = user.phone ? user.phone.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2') : '';
+  $('#userBadge').innerHTML = `<span class="avatar">🏃</span>` +
+    `<span class="ub-name">${esc(user.nickname || '跑者')}</span>` +
+    (masked ? `<span class="ub-phone">${esc(masked)}</span>` : '');
+  armBackGuard();
+}
+
+function logout() {
+  state.token = '';
+  state.user = null;
+  localStorage.removeItem('token');
+  // 核心数据缓存含性别/年龄等隐私，退出登录时一并清除
+  localStorage.removeItem(METRICS_KEY);
+  disarmBackGuard();
+  $('#topnav').style.display = 'none';
+  $('#bottomnav').classList.add('hidden');
+  $('#followModal').classList.add('hidden');
+  $('#deleteAccountModal').classList.add('hidden');
+  $('#userBadge').innerHTML = '';
+  show('auth');
+}
+
+// ---------- 移动端返回手势/返回键防误触 ----------
+// 手机浏览器与微信内置浏览器在页面处于 webview 根部时，从屏幕边缘滑动返回会直接退出程序，
+// 用户毫无准备（"滑了一下就出去了"）。登录后压入一条哨兵历史记录，把返回动作变成可拦截的
+// popstate 事件：滑动返回先弹确认框，取消就留在本页，确认才离开。
+// isMobile 在文件后半部声明；本块里的函数都在脚本求值结束之后才被调用，不存在先用后定义。
+// 三个踩过的坑，对应下面三处特殊处理：
+//   ① 哨兵原先要等 /auth/me 回来才压入，免密进入时首屏那一两秒里滑动仍会直接掉出去
+//      → 有缓存令牌就在脚本末尾先武装（见文件末尾），并在 load/pageshow/重新可见时补压。
+//   ② 哨兵被返回动作消费掉后没有立刻补回，连滑两下就漏出去 → popstate 里第一件事就是补压哨兵。
+//   ③ 确认退出时只退一级，退到的是本应用的根条目（同一文档，界面纹丝不动），用户得再滑一次才退出
+//      → 连退两级；本页就是浏览器第一条记录时退无可退，用"已退出"页收尾（见 exitApp）。
+let guardWanted = false;   // 登录态下期望拦截返回
+let guardAttached = false; // popstate 监听是否已挂上（武装会被调用多次，别重复挂）
+let guardAsking = false;   // 确认框已弹出，避免连滑叠弹窗
+let noPrevEntry = false;   // 本页是浏览器里第一条记录（退无可退）
+let pageGone = false;      // 页面已经离开（用于判断"退出"有没有真的发生）
+
+function guarded() { return !!(history.state && history.state.pwGuard); }
+
+function pushGuardEntry() {
+  if (guarded()) return;
+  // 压之前先看清这是第几条记录：等于 1 说明本页之上没有可退的页面
+  noPrevEntry = history.length <= 1;
+  // 少数内置浏览器禁用 pushState，那就降级为不拦截，别让登录流程整个卡住
+  try { history.pushState({ pwGuard: 1 }, ''); } catch (e) { /* 忽略 */ }
+}
+
+function onGuardPop() {
+  if (!guardWanted) return; // 已确认退出，放行
+  // popstate 已经发生，必须立刻把哨兵压回去，否则弹窗期间再滑一下就真退出去了
+  pushGuardEntry();
+  if (guardAsking) return;
+  guardAsking = true;
+  // 与右上角「退出」按钮的确认框保持同一标题与句式（仅退出对象一词之差），观感统一
+  confirmDialog('确定要退出跑悟吗？你的报告会安全保留，下次进入可随时查看。', { title: '退出跑悟' })
+    .then((ok) => {
+      guardAsking = false;
+      if (!ok) return; // 哨兵已补回，用户留在本页
+      exitApp();
+    });
+}
+
+function armBackGuard() {
+  // 只在移动端启用：桌面端浏览器返回键走同样的拦截反而别扭
+  if (!isMobile) return;
+  guardWanted = true;
+  pushGuardEntry();
+  if (guardAttached) return;
+  guardAttached = true;
+  window.addEventListener('popstate', onGuardPop);
+}
+function disarmBackGuard() {
+  if (!guardAttached) return;
+  guardAttached = false;
+  guardWanted = false;
+  window.removeEventListener('popstate', onGuardPop);
+}
+// 哨兵丢了就补回来：首屏加载阶段压入的记录可能不被某些浏览器认账，
+// bfcache 恢复、切后台再回来也可能不在原位，这几个时机各补一次
+function ensureGuard() {
+  if (!guardWanted || guardAsking) return;
+  pushGuardEntry();
+}
+window.addEventListener('load', ensureGuard);
+window.addEventListener('pageshow', ensureGuard);
+window.addEventListener('pagehide', () => { pageGone = true; });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) ensureGuard(); });
+
+// 退出：网页脚本没法关掉浏览器自己，按可用能力从强到弱分三级试
+function exitApp() {
+  disarmBackGuard();
+  pageGone = false;
+  // ① 微信/QQ 内置浏览器：官方桥能真正关掉页面（回到聊天窗口），这是唯一"真退出"
+  try {
+    if (window.WeixinJSBridge && WeixinJSBridge.invoke) WeixinJSBridge.invoke('closeWindow', {}, () => {});
+  } catch (e) { /* 非微信环境，走下面两级 */ }
+  if (noPrevEntry) { showExitScreenSoon(); return; }
+  // ② 连退两级：第一级退回本应用的根条目（同一文档，界面无变化），第二级才是真正的上一页。
+  //    只退一级的话会停在本页，用户点完"确定"看着像没反应，得再滑一次才行（旧版就是这个毛病）
+  history.back();
+  setTimeout(() => {
+    history.back();
+    // ③ 二级也退不动（极端情况）时兜底，别让用户点完"确定"什么也没发生
+    showExitScreenSoon();
+  }, 400);
+}
+function showExitScreenSoon() {
+  setTimeout(() => { if (!pageGone && !document.hidden) showExitScreen(); }, 400);
+}
+// 退无可退时的收尾页：本页可以直接关掉，数据都还在
+function showExitScreen() {
+  show('exit');
+  $('#topnav').style.display = 'none';
+  $('#bottomnav').classList.add('hidden');
+}
+
+// ---------- 导航（含报告页路由守卫） ----------
+document.addEventListener('click', (e) => {
+  const nav = e.target.closest('[data-nav]');
+  if (!nav) return;
+  e.preventDefault();
+  const target = nav.dataset.nav;
+  // 报告内容随刷新丢失，空报告页直接跳回历史列表
+  if (target === 'report' && !$('#reportBody').innerHTML.trim()) {
+    showToast('报告已保存至历史记录，请从历史记录中查看');
+    show('history');
+    loadHistory();
+    return;
+  }
+  show(target);
+  if (target === 'home') loadHome();
+  if (target === 'diagnose') fillMetrics();
+  if (target === 'history') loadHistory();
+  if (target === 'learn') loadLearn();
+});
+
+// ---------- 科学跑步学习园地 ----------
+// 内容数据在 public/learning.json，增删改内容只需编辑该文件，无需改代码
+async function loadLearn() {
+  const wrap = $('#learnBody');
+  try {
+    wrap.innerHTML = '<p class="section-desc">正在加载…</p>';
+    const res = await fetch('./learning.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('内容加载失败');
+    const data = await res.json();
+    renderLearn(data.categories || [], data);
+  } catch (err) {
+    wrap.innerHTML = '<p class="section-desc">内容加载失败，请稍后重试。</p>';
+  }
+}
+
+function renderLearn(cats, meta) {
+  const notes = [];
+  if (meta && meta.note) notes.push(`<p class="section-desc">${esc(meta.note)}</p>`);
+  if (meta && meta.media_note) notes.push(`<p class="learn-credit">🎬 ${esc(meta.media_note)}</p>`);
+  $('#learnBody').innerHTML = notes.join('') + cats
+    .map((c) => `
+    <div class="learn-cat">
+      <h3><span class="learn-icon">${esc(c.icon)}</span>${esc(c.name)}</h3>
+      ${(c.items || []).map((it) => `
+        <div class="learn-item">
+          <div class="learn-head" aria-expanded="false"><strong>${esc(it.title)}</strong><span class="learn-toggle"></span></div>
+          <div class="learn-body">
+            <ul>${(it.points || []).map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
+            ${(it.media && it.media.length) ? `
+            <div class="learn-media">
+              ${it.media.map((m) => `
+              <figure class="learn-fig">
+                <img class="learn-img" src="${esc(m.src)}" alt="${esc(m.caption || it.title)}" loading="lazy">
+                ${m.caption ? `<figcaption>${esc(m.caption)}</figcaption>` : ''}
+                ${(m.term || m.benefit || (m.muscles && m.muscles.length) || m.caution) ? `
+                <div class="fig-info">
+                  ${m.term ? `<div class="fig-term">📖 ${esc(m.term)}</div>` : ''}
+                  ${m.benefit ? `<div class="fig-row"><span class="fig-k">功效</span><span class="fig-v">${esc(m.benefit)}</span></div>` : ''}
+                  ${(m.muscles && m.muscles.length) ? `<div class="fig-row"><span class="fig-k">肌肉</span><span class="fig-tags">${m.muscles.map((x) => `<i>${esc(x)}</i>`).join('')}</span></div>` : ''}
+                  ${m.caution ? `<div class="fig-row fig-caution"><span class="fig-k">注意</span><span class="fig-v">${esc(m.caution)}</span></div>` : ''}
+                </div>` : ''}
+              </figure>`).join('')}
+            </div>` : ''}
+            ${it.note ? `<p class="learn-note">⚠️ ${esc(it.note)}</p>` : ''}
+            ${it.image ? `<img class="learn-img" src="${esc(it.image)}" alt="${esc(it.title)}">` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// 园地条目折叠（事件委托），同步 aria-expanded 供读屏器感知
+document.addEventListener('click', (e) => {
+  const head = e.target.closest('.learn-head');
+  if (!head) return;
+  const item = head.parentElement;
+  item.classList.toggle('open');
+  head.setAttribute('aria-expanded', item.classList.contains('open') ? 'true' : 'false');
+});
+// 退出需确认，防止误触直接掉登录态
+$('#btnLogout').addEventListener('click', async () => {
+  // 与移动端滑动返回的确认框保持同一标题与句式（仅退出对象一词之差），观感统一
+  const ok = await confirmDialog('确定要退出登录吗？你的报告会安全保留，下次登录可随时查看。', { title: '退出跑悟' });
+  if (ok) logout();
+});
+
+// ---------- 登录 / 注册 / 找回密码 ----------
+$('#tabLogin').addEventListener('click', () => switchAuth('login'));
+$('#tabRegister').addEventListener('click', () => switchAuth('register'));
+$('#forgotLink').addEventListener('click', () => switchAuth('reset'));
+
+function switchAuth(mode) {
+  state.authMode = mode;
+  $('#tabLogin').classList.toggle('active', mode === 'login');
+  $('#tabRegister').classList.toggle('active', mode === 'register');
+  $('#nicknameWrap').classList.toggle('hidden', mode !== 'register');
+  $('#passwordConfirmWrap').classList.toggle('hidden', mode === 'login');
+  // 注册：选密保问题+填答案；找回：显示注册时的密保问题再填答案（老账号走邀请码）
+  $('#secqWrap').classList.toggle('hidden', mode !== 'register');
+  $('#secaWrap').classList.toggle('hidden', !(mode === 'register' || mode === 'reset'));
+  $('#resetQuestionWrap').classList.toggle('hidden', mode !== 'reset');
+  $('#legacyInviteWrap').classList.add('hidden');
+  // 协议同意只在注册时出现：登录和重置密码都不产生新的授权关系
+  $('#agreeWrap').classList.toggle('hidden', mode !== 'register');
+  if (mode === 'reset') $('#resetQuestionText').textContent = '请先填写手机号';
+  $('#forgotLink').classList.toggle('hidden', mode !== 'login');
+  $('#passwordLabel').firstChild.textContent = mode === 'reset' ? '新密码' : '密码';
+  $('#password').placeholder = mode === 'reset' ? '请输入新密码（至少 6 位）' : '请输入密码';
+  $('#authSubmit').textContent = mode === 'register' ? '注册' : mode === 'reset' ? '重置密码' : '登录';
+}
+
+// 找回密码：手机号填完失焦即拉取该账号的密保问题（老账号无密保则降级为邀请码验证）
+$('#phone').addEventListener('blur', async () => {
+  if (state.authMode !== 'reset') return;
+  const phone = $('#phone').value.trim();
+  if (!/^1\d{10}$/.test(phone)) return;
+  try {
+    const { question, legacy } = await request('/auth/security-question', { body: { phone } });
+    $('#resetQuestionText').textContent = question || '该账号未设置密保问题，请用邀请码验证';
+    $('#legacyInviteWrap').classList.toggle('hidden', !legacy);
+  } catch (e) {
+    // 未注册等错误留到提交时提示
+  }
+});
+
+$('#authForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const phone = $('#phone').value.trim();
+  const password = $('#password').value;
+
+  // 手机号格式前端先拦一道（后端同样校验）
+  if (!/^1\d{10}$/.test(phone)) return showToast('请输入正确的 11 位手机号', true);
+
+  // 注册 / 重置密码必须两次输入一致，且密码至少 6 位
+  if (state.authMode !== 'login') {
+    const confirm = $('#passwordConfirm').value;
+    if (password !== confirm) return showToast('两次输入的密码不一致', true);
+    if (password.length < 6) return showToast('密码至少 6 位', true);
+  }
+
+  const btn = $('#authSubmit');
+  btn.disabled = true;
+  btn.textContent = '处理中…';
+  try {
+    if (state.authMode === 'reset') {
+      // 找回密码 = 手机号 + 密保答案（新账号）/ 邀请码（未设置密保的老账号）
+      const legacy = !$('#legacyInviteWrap').classList.contains('hidden');
+      const body = { phone, new_password: password };
+      if (legacy) {
+        const inv = $('#legacyInvite').value.trim();
+        if (!inv) return showToast('请输入注册时使用的邀请码', true);
+        body.invite_code = inv;
+      } else {
+        const ans = $('#secAnswer').value.trim();
+        if (ans.length < 2) return showToast('请输入密保答案（至少 2 个字）', true);
+        body.security_answer = ans;
+      }
+      const { message } = await request('/auth/reset-password', { body });
+      showToast(message || '密码已重置');
+      $('#password').value = '';
+      $('#passwordConfirm').value = '';
+      switchAuth('login');
+      return;
+    }
+
+    const path = state.authMode === 'register' ? '/auth/register' : '/auth/login';
+    const body = { phone, password };
+    if (state.authMode === 'register') {
+      // 协议同意必须由用户主动勾选：默认勾选在法律上等于没有取得同意
+      if (!$('#agreeTerms').checked) {
+        return showToast('请先阅读并勾选同意《用户服务协议》与《隐私政策》', true);
+      }
+      // 密保问题/答案是日后自助找回密码的唯一凭证，注册时必须设置
+      const q = $('#secQuestion').value;
+      const ans = $('#secAnswer').value.trim();
+      if (!q) return showToast('请选择一个密保问题', true);
+      if (ans.length < 2) return showToast('密保答案至少 2 个字，注册后将用于找回密码', true);
+      body.security_question = q;
+      body.security_answer = ans;
+      if ($('#nickname').value.trim()) body.nickname = $('#nickname').value.trim();
+    }
+    const { token, user } = await request(path, { body });
+    localStorage.setItem('token', token);
+    state.token = token;
+    setLogged(user);
+    show('home');
+    loadHome();
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = state.authMode === 'register' ? '注册' : state.authMode === 'reset' ? '重置密码' : '登录';
+  }
+});
+
+// ---------- 首页档案 ----------
+// 卡片布局：已诊断(含剩余次数) / 目标 / 当前状态 / 风险关注(高风险或带健康提醒，点击直达报告)
+async function loadHome() {
+  try {
+    const { records } = await request('/records?limit=20', { method: 'GET' });
+    const done = records.filter((r) => r.status === 'done');
+    const latest = done[0];
+    const quota = state.user ? state.user.quota : 0;
+    // 最近一条高风险或有健康提醒的报告（risk_alert 来自 diagnosis.risk_alert）
+    const highRisk = records.find((r) => r.status === 'done' && (r.risk_level === '高' || r.risk_alert));
+
+    const cards = [
+      {
+        label: '已诊断', value: done.length + ' 次', size: '26px',
+        sub: quota > 0 ? `剩余 ${quota} 次` : '次数已用完',
+        subDanger: quota <= 0, go: 'history',
+      },
+      {
+        label: '目标', isHtml: latest ? true : false,
+        value: latest ? goalBadge(latest.goal) : '未设定', size: '20px', lineH: '2.6',
+      },
+      {
+        label: '当前状态', size: '17px',
+        value: latest ? (latest.summary || '点击查看完整报告') : '还没有诊断记录',
+        go: latest ? 'history' : '',
+      },
+      {
+        label: highRisk ? '⚠ 风险关注' : '风险关注', size: '17px',
+        value: highRisk
+          ? (highRisk.risk_alert
+            ? (highRisk.risk_alert.length > 80 ? highRisk.risk_alert.slice(0, 80) + '…' : highRisk.risk_alert)
+            : (highRisk.summary || '点击查看完整报告'))
+          : '暂无高风险，继续保持',
+        recordId: highRisk ? highRisk.id : null,
+        go: highRisk ? null : 'history',
+        danger: !!highRisk,
+      },
+    ];
+
+    $('#statGrid').innerHTML = cards
+      .map((c) => {
+        const attr = c.recordId ? ` data-record="${c.recordId}"` : (c.go ? ` data-go="${c.go}"` : '');
+        const clickable = attr ? ' style="cursor:pointer"' : '';
+        const subHtml = c.sub
+          ? `<div class="stat-sub${c.subDanger ? ' danger' : ''}">${esc(c.sub)}</div>`
+          : '';
+        const shown = c.isHtml ? c.value : esc(c.value);
+        return `<div class="stat-card${c.danger ? ' stat-danger' : ''}"${attr}${clickable}>
+          <div class="label${c.danger ? ' danger' : ''}">${esc(c.label)}</div>
+          <div class="value${c.danger ? ' danger' : ''}" style="font-size:${c.size || '18px'};${c.lineH ? 'line-height:' + c.lineH : ''}">${shown}</div>
+          ${subHtml}
+        </div>`;
+      })
+      .join('');
+
+    // 周计划进度条需要完整 diagnosis，单独取一次最新记录
+    const bar = $('#planBar');
+    if (!latest) {
+      bar.classList.add('hidden');
+      return;
+    }
+    const { record } = await request('/records/' + latest.id, { method: 'GET' });
+    const plan = record.diagnosis && Array.isArray(record.diagnosis.plan_8_weeks) ? record.diagnosis.plan_8_weeks : [];
+    state.plan = plan;
+    if (plan.length) {
+      bar.classList.remove('hidden');
+      $('#planWeeks').textContent = `共 ${plan.length} 周`;
+      $('#planDots').innerHTML = plan
+        .map((w, i) => `<button type="button" class="plan-dot${i === 0 ? ' active' : ''}" data-i="${i}">${w.week || i + 1}</button>`)
+        .join('');
+      renderPlanWeek(0);
+    } else {
+      bar.classList.add('hidden');
+    }
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+// 打开指定诊断记录的报告（首页风险卡与历史列表共用）
+async function openRecord(id) {
+  try {
+    const { record } = await request('/records/' + id, { method: 'GET' });
+    if (record.status === 'failed') return showToast('该记录分析失败，可删除后重新提交', true);
+    if (record.status !== 'done') return showToast('该记录尚未完成分析，请稍后再看', true);
+    renderReport({ diagnosis_result: record.diagnosis, recognition: record.recognition || null });
+    show('report');
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+// 档案卡点击跳转（模块级只绑一次；data-record 直达报告，data-go 切页）
+$('#statGrid').addEventListener('click', (e) => {
+  const card = e.target.closest('[data-record], [data-go]');
+  if (!card) return;
+  if (card.dataset.record) return openRecord(card.dataset.record);
+  show(card.dataset.go);
+  if (card.dataset.go === 'history') loadHistory();
+  if (card.dataset.go === 'learn') loadLearn();
+});
+
+// ---------- 首页 8 周计划：选周 / 滑动 / 详情 ----------
+function renderPlanWeek(i) {
+  const plan = state.plan;
+  if (!plan.length) return;
+  const idx = Math.max(0, Math.min(plan.length - 1, i));
+  state.planIdx = idx;
+  const w = plan[idx];
+  const weekNo = w.week || idx + 1;
+
+  $('#planFocus').textContent = `8 周计划 · 第 ${weekNo} 周重点：${w.focus || '—'}`;
+  $('#planFill').style.width = ((idx + 1) / plan.length * 100) + '%';
+  $$('#planDots .plan-dot').forEach((d, k) => d.classList.toggle('active', k === idx));
+
+  const runs = (w.runs || [])
+    .map((r) => `<div class="pw-run"><span class="pw-day">${esc(r.day)}</span><span class="pw-type">${esc(r.type)}</span><span>${esc(r.detail)}</span></div>`)
+    .join('');
+  $('#planWeekDetail').innerHTML = `
+    <div class="pw-head">第 ${weekNo} 周 · 周跑量 ${esc(w.weekly_volume_km ?? '—')} km</div>
+    ${runs || '<p class="issue-evidence">本周无具体安排</p>'}
+    ${w.note ? `<div class="pw-note">${esc(w.note)}</div>` : ''}`;
+}
+
+// 圆点点击选周
+$('#planDots').addEventListener('click', (e) => {
+  const dot = e.target.closest('.plan-dot');
+  if (dot) renderPlanWeek(Number(dot.dataset.i));
+});
+
+// 轨道滑动选周（按手指在轨道上的位置定位到对应周）
+const planTrack = $('#planTrack');
+let planDragging = false;
+function planWeekFromX(clientX) {
+  const rect = planTrack.getBoundingClientRect();
+  const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  return Math.floor(ratio * state.plan.length);
+}
+planTrack.addEventListener('pointerdown', (e) => {
+  if (!state.plan.length) return;
+  planDragging = true;
+  planTrack.setPointerCapture(e.pointerId);
+  renderPlanWeek(planWeekFromX(e.clientX));
+});
+planTrack.addEventListener('pointermove', (e) => {
+  if (planDragging) renderPlanWeek(planWeekFromX(e.clientX));
+});
+planTrack.addEventListener('pointerup', () => { planDragging = false; });
+planTrack.addEventListener('pointercancel', () => { planDragging = false; });
+
+// ---------- 配速输入自动格式化：603 → 6'03"/km，630 → 6'30"/km ----------
+// 解析纯数字：3 位 = 分+秒，4 位 = 前两位为分；秒超过 59 归 59
+function normalizePace(raw) {
+  const s = String(raw ?? '').trim();
+  if (!s) return '';
+  // 已包含 ' 或 " 的，视为用户已按格式手填，原样返回
+  if (/[''"]/.test(s)) return s;
+  const digits = s.replace(/\D/g, '');
+  if (!digits) return s;
+  let mins, secs;
+  if (digits.length <= 2) { mins = Number(digits); secs = 0; }
+  else if (digits.length === 3) { mins = Number(digits[0]); secs = Number(digits.slice(1)); }
+  else { mins = Number(digits.slice(0, -2)); secs = Number(digits.slice(-2)); }
+  if (secs > 59) secs = 59;
+  return `${mins}'${String(secs).padStart(2, '0')}"`;
+}
+const paceInput = $('#mPace');
+paceInput.addEventListener('blur', () => {
+  const v = normalizePace(paceInput.value);
+  if (v) paceInput.value = v + '/km';
+});
+paceInput.addEventListener('focus', () => {
+  // 聚焦时去掉 /km 后缀，方便修改
+  paceInput.value = paceInput.value.replace(/\/km$/, '');
+});
+
+// ---------- 心率合理性校验 ----------
+// 跑步平均心率通常在 100-160；明显不可能的值（如把 142 输成 412）直接拦下
+const hrInput = $('#mHr');
+hrInput.addEventListener('blur', () => {
+  const raw = hrInput.value.trim();
+  if (raw === '') return;
+  const v = Number(raw);
+  if (!Number.isFinite(v)) return;
+  if (v < 40 || v > 220) {
+    hrInput.value = '';
+    showToast('心率 ' + raw + ' 明显超出可能范围（40-220），请核对后重新填写，如把 142 误输成 412', true);
+    return;
+  }
+  if (v < 100 || v > 160) {
+    showToast('提示：跑步平均心率多在 100-160 之间，当前填 ' + v + '，请核对是否输入有误（可继续提交）');
+  }
+});
+
+// ---------- 上传图片（本地压缩） ----------
+const uploadArea = $('#uploadArea');
+const fileInput = $('#fileInput');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--teal)'; });
+uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.style.borderColor = '';
+  if (e.dataTransfer.files.length) uploadFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) uploadFiles([...e.target.files]);
+  fileInput.value = '';
+});
+
+// canvas 压缩：长边压到 1600px、JPEG 0.82；压完反而更大就用原图
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type || !file.type.startsWith('image/')) {
+      return reject(new Error('只能上传图片文件'));
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const maxSide = 1600;
+        let { width, height } = img;
+        if (width > maxSide || height > maxSide) {
+          const r = width >= height ? maxSide / width : maxSide / height;
+          width = Math.round(width * r);
+          height = Math.round(height * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error('图片压缩失败'));
+          resolve(blob.size < file.size ? blob : file);
+        }, 'image/jpeg', 0.82);
+      };
+      img.onerror = () => reject(new Error('图片读取失败'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('图片读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadFiles(files) {
+  const left = MAX_IMAGES - state.images.length;
+  if (left <= 0) return showToast(`最多上传 ${MAX_IMAGES} 张图片`, true);
+  files = files.slice(0, left);
+
+  showToast('图片处理中…');
+  try {
+    const compressed = [];
+    for (const f of files) compressed.push(await compressImage(f));
+
+    const fd = new FormData();
+    compressed.forEach((f, i) => fd.append('images', f, f.name || `image_${i}.jpg`));
+
+    showToast('上传中…');
+    const { urls } = await request('/upload', { body: fd, isForm: true });
+    state.images = state.images.concat(urls);
+    renderPreviews();
+    showToast(`已上传 ${urls.length} 张图片`);
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+function renderPreviews() {
+  $('#previewGrid').innerHTML = state.images
+    .map((url, i) => `<div class="preview-item"><img src="${url}" alt="跑步数据"><button class="preview-del" data-i="${i}" aria-label="删除第 ${i + 1} 张图片">×</button></div>`)
+    .join('');
+  const cnt = $('#uploadCount');
+  if (cnt) cnt.textContent = state.images.length ? `已上传 ${state.images.length} / ${MAX_IMAGES} 张` : '';
+  // 上传后压缩上传区：隐藏长说明避免与缩略图挤在一起（微信内置浏览器下尤甚），也缩短页面
+  $('#uploadArea').classList.toggle('compact', state.images.length > 0);
+  if (state.images.length) {
+    $('.upload-area > p:nth-child(2)').textContent = '继续添加图片';
+  } else {
+    $('.upload-area > p:nth-child(2)').textContent = '点击或拖拽图片到此处';
+  }
+}
+
+$('#previewGrid').addEventListener('click', (e) => {
+  const del = e.target.closest('.preview-del');
+  if (del) {
+    state.images.splice(Number(del.dataset.i), 1);
+    renderPreviews();
+  }
+});
+
+// ---------- 核心数据本地记忆（性别/年龄/身高/步频等不重复录入） ----------
+// 选了半马/全马时连带记忆比赛日期；退出登录会清空，避免账号间串数据
+const METRIC_FIELDS = ['mGender','mAge','mHeight','mWeight','mRunYears','mWeeklyVolume','mPace','mHr','mCadence','goal'];
+const METRICS_KEY = 'paowu_metrics';
+function saveMetrics() {
+  const data = {};
+  ['goal', ...METRIC_FIELDS, 'raceYear', 'raceMonth', 'raceDay'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  try { localStorage.setItem(METRICS_KEY, JSON.stringify(data)); } catch (e) {}
+}
+function fillMetrics() {
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem(METRICS_KEY) || '{}'); } catch (e) { return; }
+  METRIC_FIELDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el && data[id]) el.value = data[id];
+  });
+  // 比赛日期三联下拉：每级 change 会重建下一级的选项，必须 年→月→日 顺序触发，反了选不上
+  // goal 的 change 无论值是什么都要触发，让日期区的显隐与目标保持同步
+  const goalEl = document.getElementById('goal');
+  if (data.goal) goalEl.dispatchEvent(new Event('change'));
+  if (data.goal === 'half_marathon' || data.goal === 'full_marathon') {
+    const y = document.getElementById('raceYear');
+    const m = document.getElementById('raceMonth');
+    const d = document.getElementById('raceDay');
+    if (data.raceYear) { y.value = data.raceYear; y.dispatchEvent(new Event('change')); }
+    if (data.raceMonth) { m.value = data.raceMonth; m.dispatchEvent(new Event('change')); }
+    if (data.raceDay) d.value = data.raceDay;
+  }
+}
+$('#diagnoseForm').addEventListener('input', saveMetrics);
+$('#diagnoseForm').addEventListener('change', saveMetrics);
+
+// ---------- 目标联动 ----------
+$('#goal').addEventListener('change', (e) => {
+  const show = e.target.value !== 'none' && e.target.value !== 'health';
+  $('#raceDateWrap').classList.toggle('hidden', !show);
+  // 展开时按当前日期刷新年份范围（滚动递进，不会出现"4 年后选不了"）
+  if (show) refreshRaceYears();
+});
+
+// ---------- 比赛日期：年/月/日三段下拉（替代原生 date 控件，年份选择更醒目） ----------
+const raceYear = $('#raceYear');
+const raceMonth = $('#raceMonth');
+const raceDay = $('#raceDay');
+// 年份按"打开时的当前年 ~ +3"滚动生成：每年自动递进，永不过期
+function refreshRaceYears() {
+  const y = new Date().getFullYear();
+  const selected = raceYear.value;
+  raceYear.innerHTML = '';
+  for (let i = 0; i <= 3; i++) raceYear.appendChild(new Option((y + i) + ' 年', String(y + i)));
+  if (selected && Number(selected) >= y && Number(selected) <= y + 3) raceYear.value = selected;
+  fillRaceDays();
+}
+raceMonth.appendChild(new Option('月', ''));
+for (let m = 1; m <= 12; m++) raceMonth.appendChild(new Option(m + ' 月', String(m)));
+refreshRaceYears();
+raceYear.addEventListener('change', fillRaceDays);
+raceMonth.addEventListener('change', fillRaceDays);
+function fillRaceDays() {
+  const y = Number(raceYear.value);
+  const m = Number(raceMonth.value);
+  raceDay.innerHTML = '';
+  raceDay.appendChild(new Option('日', ''));
+  const days = y && m ? new Date(y, m, 0).getDate() : 31;
+  for (let d = 1; d <= days; d++) raceDay.appendChild(new Option(d + ' 日', String(d)));
+}
+function currentRaceDate() {
+  if (raceYear.value && raceMonth.value && raceDay.value) {
+    return `${raceYear.value}-${String(raceMonth.value).padStart(2, '0')}-${String(raceDay.value).padStart(2, '0')}`;
+  }
+  return '';
+}
+
+// 比赛日期校验：返回提示文案，空串表示通过
+// ① 半马/全马必须选完整的年月日（只选年或只选年月，工作流拿到的日期是残缺的）
+// ② 选完整后还要晚于今天，否则生成出来的备战计划会整段过期
+function raceDateProblem() {
+  const goal = document.getElementById('goal').value;
+  if (goal !== 'half_marathon' && goal !== 'full_marathon') return '';
+  if (!raceYear.value || !raceMonth.value || !raceDay.value) return '请选择完整的比赛日期（年、月、日）';
+  const picked = new Date(Number(raceYear.value), Number(raceMonth.value) - 1, Number(raceDay.value));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (picked.getTime() < today.getTime()) return '比赛日期已早于今天，请重新选择目标比赛日期';
+  return '';
+}
+
+// ---------- 两步向导：① 核心数据+目标 → ② 上传图片+描述+提交 ----------
+function showWizStep(n) {
+  $('#wizPage1').classList.toggle('hidden', n !== 1);
+  $('#wizPage2').classList.toggle('hidden', n !== 2);
+  $('#wizStep1').classList.toggle('active', n === 1);
+  $('#wizStep2').classList.toggle('active', n === 2);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+// 健康数据同意：勾过一次就记住，避免每次诊断都重复勾（反复索要同意会让授权变成走过场）
+if (localStorage.getItem('consentHealth') === '1') $('#consentHealth').checked = true;
+$('#consentHealth').addEventListener('change', (e) => {
+  if (e.target.checked) localStorage.setItem('consentHealth', '1');
+  else localStorage.removeItem('consentHealth');
+});
+
+$('#btnNextStep').addEventListener('click', () => {
+  const problem = raceDateProblem();
+  if (problem) return showToast(problem, true);
+  // 敏感个人信息需要单独同意：在离开第 1 步前就拦住，
+  // 不放到第 2 步提交时才报错——那样用户已经传完图片，白折腾一场
+  if (!$('#consentHealth').checked) {
+    return showToast('请先勾选同意处理你的健康数据，再进入下一步', true);
+  }
+  showWizStep(2);
+});
+$('#btnPrevStep').addEventListener('click', () => showWizStep(1));
+
+// ---------- 提交诊断 ----------
+// 分段提示：告诉用户当前进行到哪一步，缓解 1-3 分钟等待的焦虑
+let stageTimers = null;
+function startLoadingStages() {
+  // 用步骤完成度代替转圈：已完成的步骤打勾，当前步骤脉冲呼吸，比无限旋转不容易让人头晕
+  const items = $$('#loadingSteps [data-step]');
+  const count = $('#loadingCount');
+  if (!items.length) return;
+  stopLoadingStages();
+
+  const total = items.length;
+  let done = 0;
+  // 节奏按 SSE 实测对齐：工作流启动 ~3s、识图节点 ~20s（队列空闲时）～60s（排队时）、诊断计划节点 ~150s～480s。
+  // 服务端排队会让同一档跑出 2-4 倍差异，所以打勾节奏取得比最快实测更保守（宁可进度条走得慢，也不要跑在真实进度前面）。
+  // 前 3 步打勾，第 4 步只保持脉冲"进行中"，直到接口真实返回——这一步对应诊断节点的逐周计划生成，本身就是最慢的一段。
+  const stepTimes = [0, 70 * 1000, 200 * 1000];
+  const timers = [];
+
+  const render = () => {
+    items.forEach((li, i) => {
+      li.classList.toggle('done', i < done);
+      li.classList.toggle('active', i === done);
+    });
+    count.textContent = `已完成 ${done} / ${total} 步`;
+  };
+  render();
+
+  stepTimes.forEach((ms, i) => {
+    timers.push(setTimeout(() => {
+      // 最后一次最多标记到 total-1，保证"生成计划"始终是进行中、而非已完成
+      done = Math.min(i + 1, total - 1);
+      render();
+    }, ms));
+  });
+  // 明显超时仍未返回：如实提示当前在做什么、还要多久，不制造"马上就好"的假象
+  timers.push(setTimeout(() => {
+    count.textContent = '正在逐周生成 8 周训练计划，这一步最慢，通常 3-5 分钟内完成，请再稍候…';
+  }, 420 * 1000));
+  stageTimers = timers;
+}
+function stopLoadingStages() {
+  if (stageTimers) { stageTimers.forEach(clearTimeout); stageTimers = null; }
+}
+
+$('#diagnoseForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!state.images.length) return showToast('请先上传至少一张图片', true);
+  // 兜底：用户可能返回第 1 步取消了勾选（也会同步清掉 localStorage 记录）
+  if (!$('#consentHealth').checked) {
+    showWizStep(1);
+    return showToast('请先在第 1 步勾选同意处理你的健康数据', true);
+  }
+  // 兜底：用户可能在第 1 步改了日期后直接返回再提交，这里再拦一次
+  const dateProblem = raceDateProblem();
+  if (dateProblem) return showToast(dateProblem, true);
+
+  // 结构化指标必填校验（图片识别可能受限，这些是诊断的核心依据）
+  // 配速兜底：已格式化的原样返回，纯数字的自动转成 6'03"/km
+  const m = {
+    gender: $('#mGender').value,
+    age: $('#mAge').value,
+    height: $('#mHeight').value,
+    weight: $('#mWeight').value,
+    run_years: $('#mRunYears').value,
+    weekly_volume: $('#mWeeklyVolume').value,
+    avg_pace: normalizePace($('#mPace').value),
+    avg_hr: $('#mHr').value,
+  };
+  const required = {
+    gender: '性别', age: '年龄', height: '身高', weight: '体重',
+    run_years: '跑龄', weekly_volume: '最近 7 天累计跑量',
+    avg_pace: '最近一次典型跑步配速', avg_hr: '最近一次跑步平均心率',
+  };
+  for (const key in required) {
+    if (String(m[key] ?? '').trim() === '') {
+      return showToast('请填写' + required[key], true);
+    }
+  }
+
+  const btn = $('#diagnoseSubmit');
+  btn.disabled = true;
+  state.diagnosing = true;
+  $('#loadingOverlay').classList.remove('hidden');
+  startLoadingStages();
+
+  try {
+    const { result, recognition } = await request('/diagnose', {
+      body: {
+        images: state.images,
+        user_text: $('#userText').value.trim(),
+        goal: $('#goal').value,
+        race_date: currentRaceDate(),
+        ...m,
+        cadence: $('#mCadence').value,
+      },
+    });
+    // 本次完成：清空表单并回到向导第 1 步，下次进来是干净状态
+    state.images = [];
+    renderPreviews();
+    $('#userText').value = '';
+    showWizStep(1);
+    renderReport({ ...result, recognition: recognition || result.recognition || null });
+    show('report');
+    showToast('报告已保存至历史记录');
+    const me = await request('/auth/me', { method: 'GET' });
+    setLogged(me.user);
+  } catch (err) {
+    if (err.data && err.data.need_pay) {
+      $('#payModal').classList.remove('hidden');
+    } else {
+      // 扣子慢或网络抖动时，可能后端已落库成功但响应丢失；引导用户去历史记录确认，避免误以为白跑一次
+      showToast(err.message + '；若历史记录里已出现该次诊断，可直接点开查看结果', true);
+    }
+  } finally {
+    state.diagnosing = false;
+    stopLoadingStages();
+    $('#loadingOverlay').classList.add('hidden');
+    btn.disabled = false;
+  }
+});
+
+// 分析进行中拦截刷新，避免图片与报告丢失
+window.addEventListener('beforeunload', (e) => {
+  if (state.diagnosing) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ---------- 模拟支付 ----------
+$('#payCancel').addEventListener('click', () => $('#payModal').classList.add('hidden'));
+$('#payConfirm').addEventListener('click', async () => {
+  const btn = $('#payConfirm');
+  btn.disabled = true;
+  btn.textContent = '处理中…';
+  try {
+    await request('/pay');
+    const me = await request('/auth/me', { method: 'GET' });
+    setLogged(me.user);
+    $('#payModal').classList.add('hidden');
+    showToast('充值成功，已到账 1 次，请重新提交');
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '支付 9.9 元（验证期模拟）';
+  }
+});
+
+// ---------- 意见反馈 ----------
+// 联系方式选填，但填了必须是 11 位手机号或正确邮箱（防止乱填导致无法回访）
+function validContact(v) {
+  const s = String(v || '').trim();
+  if (!s) return true;
+  return /^1\d{10}$/.test(s) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+const feedbackContactInput = $('#feedbackContact');
+feedbackContactInput.addEventListener('blur', () => {
+  const v = feedbackContactInput.value.trim();
+  if (v && !validContact(v)) {
+    showToast('联系方式格式不对：请填 11 位手机号（1 开头）或正确的邮箱', true);
+  }
+});
+
+// ---------- 顶栏「关注」弹窗 ----------
+// 四页共用同一个入口（顶栏是全局的），点遮罩空白处也能关，跟其他弹窗行为一致
+$('#btnFollow').addEventListener('click', () => $('#followModal').classList.remove('hidden'));
+$('#followClose').addEventListener('click', () => $('#followModal').classList.add('hidden'));
+$('#followModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
+});
+
+$('#btnFeedback').addEventListener('click', () => {
+  $('#feedbackContent').value = '';
+  $('#feedbackContact').value = '';
+  $('#feedbackModal').classList.remove('hidden');
+  $('#feedbackContent').focus();
+});
+$('#feedbackCancel').addEventListener('click', () => $('#feedbackModal').classList.add('hidden'));
+$('#feedbackForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const content = $('#feedbackContent').value.trim();
+  const contact = $('#feedbackContact').value.trim();
+  if (content.length < 5) return showToast('反馈内容至少 5 个字', true);
+  if (!validContact(contact)) return showToast('联系方式格式不对：请填 11 位手机号或正确的邮箱', true);
+
+  const btn = $('#feedbackSubmit');
+  btn.disabled = true;
+  btn.textContent = '提交中…';
+  try {
+    await request('/feedback', { body: { content, contact: contact || null } });
+    $('#feedbackModal').classList.add('hidden');
+    showToast('感谢反馈！我们会尽快处理');
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交反馈';
+  }
+});
+
+// ---------- 账号与数据：导出 / 注销 ----------
+// 落地上传文件有两条路：
+//   · 桌面端走 <a download>：直接存进「下载」文件夹，这是桌面用户真正想要的，
+//     不能因为 navigator.canShare 在桌面 Chrome 上也为真就弹系统分享面板（那是多此一举）。
+//   · 触屏端走 Web Share API：手机浏览器（尤其微信内置浏览器）会忽略 <a download>，
+//     而系统分享面板能"存到文件 / 发给微信 / 发给自己"，是手机上唯一可靠的落地方式。
+// 分享这条路上出任何岔子（无用户手势、系统不支持）都必须退回下载，不能把文件丢掉。
+function saveFile(file, name) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  // 立即 revoke 会让部分浏览器来不及取到数据，延后释放
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+$('#btnExportData').addEventListener('click', async () => {
+  const btn = $('#btnExportData');
+  btn.disabled = true;
+  btn.textContent = '打包中…';
+  try {
+    const data = await request('/account/export', { method: 'GET' });
+    const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const name = `跑悟数据导出-${stamp}.json`;
+    const file = new File([JSON.stringify(data, null, 2)], name, { type: 'application/json' });
+
+    const isTouch = (navigator.maxTouchPoints || 0) > 0;
+    if (isTouch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: name });
+        showToast('数据已导出');
+        return;
+      } catch (e) {
+        // 用户在分享面板上主动取消：这是他自己的选择，不当失败处理
+        if (e && e.name === 'AbortError') return;
+        // 其它原因失败（无用户手势、系统不支持等）继续往下走下载兜底，不能什么都不发生
+      }
+    }
+    saveFile(file, name);
+    showToast('数据已导出');
+  } catch (err) {
+    showToast(err.message || '导出失败，请稍后重试', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '导出';
+  }
+});
+
+$('#btnDeleteAccount').addEventListener('click', () => {
+  $('#delPassword').value = '';
+  $('#delConfirmWord').value = '';
+  $('#deleteAccountModal').classList.remove('hidden');
+  $('#delPassword').focus();
+});
+$('#delAccountCancel').addEventListener('click', () => $('#deleteAccountModal').classList.add('hidden'));
+$('#deleteAccountModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
+});
+
+$('#deleteAccountForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = $('#delPassword').value;
+  const confirm = $('#delConfirmWord').value.trim();
+  if (confirm !== '注销') return showToast('请手动输入「注销」两个字以确认', true);
+  if (!password) return showToast('请输入登录密码', true);
+
+  // 第三道确认：手输完不是直接删，再给一次"看清后果"的机会
+  const sure = await confirmDialog(
+    '最后确认：账号、全部诊断记录与上传的跑步图片将被永久删除，无法恢复。确定要注销吗？',
+    { title: '永久删除，不可恢复' }
+  );
+  if (!sure) return;
+
+  const btn = $('#delAccountSubmit');
+  btn.disabled = true;
+  btn.textContent = '注销中…';
+  try {
+    await request('/account', { method: 'DELETE', body: { password, confirm } });
+    $('#deleteAccountModal').classList.add('hidden');
+    // 先登出再提示：账号已不存在，旧令牌留在本地只会让用户以为还能操作
+    logout();
+    showToast('账号已注销，全部数据已删除');
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '确认注销';
+  }
+});
+
+// ---------- 报告渲染 ----------
+const RISK_ICON = { 高: '⚠️', 中: '⚡', 低: '✓' };
+
+// 识图指标展示配置：报告页「截图识别到的数据」卡片按此顺序渲染
+// 字段名与 Dify 识图节点 metrics 白名单一一对应，改白名单时要同步改这里
+const RECOG_GROUPS = [
+  {
+    title: '基础数据',
+    items: [
+      ['distance_km', '距离', 'km'],
+      ['duration_min', '时长', '分钟'],
+      ['avg_pace_min_per_km', '平均配速', '/km'],
+      ['fastest_pace_min_per_km', '最快配速', '/km'],
+      ['avg_heart_rate', '平均心率', 'bpm'],
+      ['max_heart_rate', '最大心率', 'bpm'],
+      ['cadence_spm', '步频', 'spm'],
+      ['weekly_volume_km', '近 7 天跑量', 'km'],
+      ['elevation_gain_m', '爬升', 'm'],
+    ],
+  },
+  {
+    title: '跑姿与体能',
+    items: [
+      ['avg_stride_cm', '平均步幅', 'cm'],
+      ['ground_contact_time_ms', '触地时间', 'ms'],
+      ['vertical_oscillation_cm', '垂直振幅', 'cm'],
+      ['vo2max', '最大摄氧量', ''],
+      ['aerobic_training_effect', '有氧训练压力', ''],
+      ['anaerobic_training_effect', '无氧训练压力', ''],
+    ],
+  },
+];
+
+// 配速统一成 5'49" 显示：识别结果可能是十进制分钟 5.82，也可能已是 5'49"
+function formatPaceValue(v) {
+  if (typeof v === 'number' && isFinite(v)) {
+    let mins = Math.floor(v);
+    let secs = Math.round((v - mins) * 60);
+    if (secs === 60) { mins += 1; secs = 0; }
+    return `${mins}'${String(secs).padStart(2, '0')}"`;
+  }
+  return normalizePace(v);
+}
+
+// 其余数值：模型偶尔带单位（如 "256ms"），只保留数值部分，单位由卡片配置补
+function formatMetricValue(v) {
+  const s = String(v ?? '').trim();
+  const m = s.match(/^-?\d+(?:\.\d+)?/);
+  return m ? m[0] : s;
+}
+
+// 生成「截图识别到的数据」卡片：只列真正识别到的项，全为空时返回空串（不出这张卡）
+function buildRecogCard(recognition) {
+  const m = (recognition && recognition.metrics) || {};
+  const has = (k) => m[k] !== null && m[k] !== undefined && String(m[k]).trim() !== '';
+  const groups = [];
+
+  for (const g of RECOG_GROUPS) {
+    const chips = g.items.filter(([k]) => has(k)).map(([k, label, unit]) => {
+      const val = k.indexOf('pace') >= 0 ? formatPaceValue(m[k]) : formatMetricValue(m[k]);
+      return `<div class="metric-chip"><span class="mc-label">${esc(label)}</span><span class="mc-value">${esc(val)}${unit ? `<em>${esc(unit)}</em>` : ''}</span></div>`;
+    });
+    // 左右触地平衡是两个字段，合并成一个 chip（只在跑姿组，占两列防数字断行）
+    if (g.title === '跑姿与体能' && has('ground_balance_left_pct') && has('ground_balance_right_pct')) {
+      chips.push(`<div class="metric-chip wide"><span class="mc-label">左右触地平衡</span><span class="mc-value">${esc(formatMetricValue(m.ground_balance_left_pct))} / ${esc(formatMetricValue(m.ground_balance_right_pct))}<em>% 左/右</em></span></div>`);
+    }
+    if (chips.length) {
+      groups.push(`<div class="metric-group"><h4>${esc(g.title)}</h4><div class="metric-chips">${chips.join('')}</div></div>`);
+    }
+  }
+
+  // 跑姿照片观察（上传的是跑姿照片而非 App 截图时才有内容）
+  const obs = (Array.isArray(recognition && recognition.form_observations) ? recognition.form_observations : [])
+    .filter((o) => o && o.finding && String(o.finding).indexOf('未观察到') < 0);
+
+  // 截图里含多次跑步时（runs），说明报告基于哪一次，并给出几次之间的横向对比
+  const runs = (Array.isArray(recognition && recognition.runs) ? recognition.runs : [])
+    .filter((r) => r && r.distance_km != null);
+  const runsHtml = runs.length > 1
+    ? `<div class="metric-group"><h4>截图里包含 ${runs.length} 次跑步（报告基于最新一次）</h4>
+      ${runs.map((r) => {
+        const date = String(r.date || '').replace(/^\d{4}-/, '');
+        const parts = [date || '日期未识别', `${formatMetricValue(r.distance_km)} km`];
+        if (r.avg_pace_min_per_km != null) parts.push(`配速 ${formatPaceValue(r.avg_pace_min_per_km)}`);
+        if (r.avg_heart_rate != null) parts.push(`心率 ${formatMetricValue(r.avg_heart_rate)} bpm`);
+        if (r.cadence_spm != null) parts.push(`步频 ${formatMetricValue(r.cadence_spm)}`);
+        return `<p class="issue-evidence">${esc(parts.join(' · '))}</p>`;
+      }).join('')}
+    </div>`
+    : '';
+
+  if (!groups.length && !obs.length && !runsHtml) return '';
+
+  return `<div class="report-card wide" id="card-metrics">
+    <h3>截图识别到的数据</h3>
+    <p class="issue-evidence">以下数据由 AI 从您上传的截图中读取（对应最近一次跑步），是本次诊断与训练计划的依据。识别可能有误差，请核对；关键数据如有出入，建议下次诊断时一并修正。</p>
+    ${groups.join('')}
+    ${runsHtml}
+    ${obs.length ? `<div class="metric-group"><h4>跑姿照片观察</h4>
+      ${obs.map((o) => `<p class="issue-evidence"><strong>${esc(o.part || '')}</strong>：${esc(o.finding)}${o.confidence ? `（把握度 ${esc(o.confidence)}）` : ''}</p>`).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+function renderReport(payload) {
+  const d = payload.diagnosis_result || payload;
+  const recognition = payload.recognition || null;
+  const body = $('#reportBody');
+  const banner = $('#riskBanner');
+  const nav = $('#reportNav');
+  const actions = $('#reportActions');
+
+  // 层层兜底：没有 diagnosis_result 就把整个 payload 当诊断对象
+  // 走到这里说明报告内容不是可渲染的对象（AI 返回的文本没能解析成 JSON）。
+  // 正常路径下后端已拦掉这类结果，这里只兜历史遗留记录与异常展示，不再提具体平台名。
+  if (!d || typeof d !== 'object' || Array.isArray(d)) {
+    body.innerHTML = `<div class="report-card wide">
+      <h3>这份报告的内容不完整</h3>
+      <p>AI 返回的结果没能被正确解析（可能是生成中途被截断）。建议回到诊断页重新提交一次；重新提交不额外扣费。</p>
+      <p class="issue-evidence">这次记录已保存在历史里，可以删除后重试。若反复出现，麻烦在「意见反馈」里告知我们。</p>
+    </div>`;
+    banner.classList.add('hidden');
+    nav.classList.add('hidden');
+    actions.classList.add('hidden');
+    return;
+  }
+
+  // 字段别名兜底：plan_8_weeks 可能被命名成 training_plan
+  const plan = Array.isArray(d.plan_8_weeks) ? d.plan_8_weeks : (Array.isArray(d.training_plan) ? d.training_plan : []);
+  const progress = d.progress || null;
+  const issues = Array.isArray(d.diagnosis) ? d.diagnosis : [];
+  const goalFz = d.goal_feasibility || null;
+  const hasProgress = progress && (progress.improved || progress.regressed || progress.prev_plan_completion);
+
+  // 红线通栏
+  if (d.risk_alert) {
+    banner.classList.remove('hidden');
+    banner.innerHTML = `<span class="rb-icon">⚠️</span><span><strong>健康提醒：</strong>${esc(d.risk_alert)}</span>`;
+  } else {
+    banner.classList.add('hidden');
+  }
+
+  const html = [];
+
+  // 图片识别受限：给特殊提示，而不是渲染一堆 null 指标
+  if (recognition && (recognition.image_type === 'unclear' || recognition.image_error)) {
+    html.push(`<div class="report-card wide warn-card" id="card-image">
+      <h3>📷 图片识别受限</h3>
+      <p>${esc(recognition.image_error || '上传的图片未能识别出跑步相关内容')}</p>
+      <p class="issue-evidence">本次报告仅基于您的文字描述生成。建议重新上传清晰的跑步 App 截图或跑姿照片，以获得更准确的诊断与计划。</p>
+    </div>`);
+  }
+
+  html.push(`<div class="report-card" id="card-summary">
+    <h3>一句话总评</h3>
+    <p class="report-summary">${esc(d.summary || '—')}</p>
+  </div>`);
+
+  // 识别到的原始指标：诊断结论的依据来源，放在总评后让用户先核对数据
+  html.push(buildRecogCard(recognition));
+
+  if (hasProgress) {
+    const improved = (progress.improved || []).filter(Boolean);
+    const regressed = (progress.regressed || []).filter(Boolean);
+    // 兼容两种输出形态：prev_plan_completion/adjustment 可能在 progress 内或顶层
+    const ppc = progress.prev_plan_completion || d.prev_plan_completion || null;
+    const adj = progress.adjustment || d.adjustment || null;
+    // 空内容给说明文案，不用"—"占位
+    const improvedHtml = improved.length
+      ? improved.map((i) => `<li>${esc(i)}</li>`).join('')
+      : '<li class="progress-empty">暂无可对比的改善数据，下次诊断自动生成</li>';
+    const regressedHtml = regressed.length
+      ? regressed.map((i) => `<li>${esc(i)}</li>`).join('')
+      : '<li class="progress-empty">本次没有需要特别注意的变化，继续保持</li>';
+    html.push(`<div class="report-card" id="card-progress">
+      <h3>相比上次的对比</h3>
+      <div class="progress-grid">
+        <div class="progress-col improved"><h4>改善的</h4><ul>${improvedHtml}</ul></div>
+        <div class="progress-col regressed"><h4>需注意</h4><ul>${regressedHtml}</ul></div>
+      </div>
+      ${ppc ? `<p class="progress-note"><strong>上一轮计划完成度：</strong>${esc(ppc)}</p>` : ''}
+      ${adj ? `<p class="progress-note"><strong>调整思路：</strong>${esc(adj)}</p>` : ''}
+    </div>`);
+  } else {
+    // 首次诊断的友好空状态
+    html.push(`<div class="report-card empty-state" id="card-progress">
+      <h3>相比上次的对比</h3>
+      <p>这是您的首次诊断，还没有可对比的历史数据。下次上传最新跑步数据后，我们会自动生成进度对比，告诉您哪些指标改善了、哪些需要注意。</p>
+    </div>`);
+  }
+
+  if (issues.length) {
+    html.push(`<div class="report-card" id="card-issues">
+      <h3>问题诊断（${issues.length} 项）</h3>
+      ${issues.map((item) => `
+        <div class="issue-item">
+          <div class="issue-head"><h4>${esc(item.issue)}</h4>
+            <span class="risk-tag risk-${esc(item.risk)}">${RISK_ICON[item.risk] || ''} ${esc(item.risk) || '未知'}风险</span>
+          </div>
+          <p class="issue-evidence">依据：${esc(item.evidence) || '未提供依据'}</p>
+          ${item.advice ? `<p class="issue-advice">${esc(item.advice)}</p>` : ''}
+        </div>`).join('')}
+    </div>`);
+  }
+
+  if (goalFz) {
+    const concerns = Array.isArray(goalFz.concerns) ? goalFz.concerns.filter(Boolean).join('；') : (goalFz.concerns || '');
+    html.push(`<div class="report-card" id="card-goal">
+      <h3>目标评估</h3>
+      <p style="font-size:14px;margin-bottom:8px">${esc(goalFz.assessment || '—')}</p>
+      ${concerns ? `<p class="issue-evidence">风险点：${esc(concerns)}</p>` : ''}
+      ${goalFz.milestone ? `<p class="issue-advice">关键里程碑：${esc(goalFz.milestone)}</p>` : ''}
+      ${d.race_day_strategy ? `<p class="issue-advice" style="margin-top:8px">比赛日策略：${esc(d.race_day_strategy)}</p>` : ''}
+    </div>`);
+  }
+
+  // 趋势图占位（≥2 个数据点时才填充）
+  html.push(`<div class="report-card wide hidden" id="trendWrap">
+    <h3>数据趋势</h3>
+    <p class="issue-evidence" style="margin-bottom:8px">随诊断次数变化的周跑量与平均心率</p>
+    <div id="trendChart" style="width:100%;height:240px"></div>
+  </div>`);
+
+  if (plan.length) {
+    html.push(`<div class="report-card wide" id="card-plan">
+      <div class="card-head-row">
+        <h3>未来 ${plan.length} 周训练计划</h3>
+        <button class="btn-ghost btn-sm" id="expandAllWeeks">展开全部</button>
+      </div>
+      <div class="timeline">
+        ${plan.map((w, idx) => {
+          const weekNo = w.week || idx + 1;
+          return `<div class="tl-item${idx === 0 ? ' open' : ''}" data-idx="${idx}">
+            <div class="tl-rail"><span class="tl-dot">${weekNo}</span></div>
+            <div class="tl-content">
+              <div class="week-head"><strong>第 ${weekNo} 周 · ${esc(w.focus || '—')}</strong><span>周跑量 ${esc(w.weekly_volume_km ?? '—')} km · 点击展开</span></div>
+              <div class="week-body">
+                ${(w.runs || []).map((r) => `
+                  <div class="run-item"><span class="run-day">${esc(r.day)}</span><span class="run-type">${esc(r.type)}</span><span>${esc(r.detail)}</span></div>`).join('') || '<p class="issue-evidence">本周无具体安排</p>'}
+                ${w.note ? `<div class="week-note">${esc(w.note)}</div>` : ''}
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`);
+  }
+
+  if (d.next_check) {
+    html.push(`<p class="next-check">${esc(d.next_check)}</p>`);
+  }
+
+  body.innerHTML = html.join('');
+  actions.classList.remove('hidden');
+  wireReportExtras(nav, plan.length);
+  loadTrends();
+}
+
+// 锚点导航 + 展开全部 + 导出按钮
+function wireReportExtras(nav, planCount) {
+  const sections = [];
+  const has = (id) => document.getElementById(id);
+  if (has('card-summary')) sections.push(['总评', 'card-summary']);
+  if (has('card-progress')) sections.push(['进度对比', 'card-progress']);
+  if (has('card-issues')) sections.push(['问题诊断', 'card-issues']);
+  if (has('card-goal')) sections.push(['目标评估', 'card-goal']);
+  if (has('card-plan')) sections.push(['训练计划', 'card-plan']);
+
+  if (sections.length > 1) {
+    nav.classList.remove('hidden');
+    nav.innerHTML = sections.map(([t, id]) => `<a href="#" data-scroll="${id}">${t}</a>`).join('');
+  } else {
+    nav.classList.add('hidden');
+  }
+
+  if (planCount > 1) {
+    const btn = $('#expandAllWeeks');
+    btn.classList.remove('hidden');
+    btn.onclick = () => {
+      const items = $$('#card-plan .tl-item');
+      const allOpen = [...items].every((it) => it.classList.contains('open'));
+      items.forEach((it) => it.classList.toggle('open', !allOpen));
+      btn.textContent = allOpen ? '展开全部' : '收起全部';
+    };
+  }
+}
+
+// 报告内交互：折叠周计划、锚点滚动、导出
+$('#reportBody').addEventListener('click', (e) => {
+  const head = e.target.closest('.week-head');
+  if (head) {
+    head.closest('.tl-item').classList.toggle('open');
+    return;
+  }
+});
+
+$('#reportNav').addEventListener('click', (e) => {
+  const link = e.target.closest('[data-scroll]');
+  if (!link) return;
+  e.preventDefault();
+  const el = document.getElementById(link.dataset.scroll);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+$('#btnExportImage').addEventListener('click', exportImage);
+$('#btnExportPdf').addEventListener('click', exportPdf);
+
+// CDN 按需加载，不阻塞首屏
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('组件加载失败，请检查网络后重试'));
+    document.head.appendChild(s);
+  });
+}
+
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+// 微信内置浏览器（XWeb/X5 内核）对 Web Share 没有可靠实现：canShare 可能为真但调起后
+// 永不返回（页面卡死在"导出中"），失败后落到的 a.download blob 链接又会被微信拦截、
+// 跳到外部浏览器打开一个空白 blob: 页面，文件也不落地（用户实测反馈）。
+// 因此微信环境一律跳过 share 和 blob 下载，直接走页内长图预览兜底。
+const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+// 生成报告水印页脚的二维码（dataURL），指向产品页面本身
+// 用 window.location.origin：本地是 localhost，部署后自动是线上域名，无需硬编码
+async function makeWatermarkQR() {
+  await loadScript('./vendor/qrcode.min.js');
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;left:-9999px;top:0;';
+  document.body.appendChild(holder);
+  try {
+    new QRCode(holder, {
+      text: window.location.origin,
+      width: 140,
+      height: 140,
+      correctLevel: QRCode.CorrectLevel.M,
+    });
+    const cv = holder.querySelector('canvas');
+    const img = holder.querySelector('img');
+    if (cv) return cv.toDataURL('image/png');
+    if (img && img.src) return img.src;
+    return null;
+  } finally {
+    holder.remove();
+  }
+}
+
+// 检测静态图片是否存在（公众号/视频号二维码放在 public/ 根目录）
+async function imgExists(name) {
+  try {
+    const r = await fetch(name, { method: 'HEAD', cache: 'no-cache' });
+    return r.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 三码水印页脚：左公众号 / 中程序码（主推）/ 右视频号
+// 视频号用裁好的方形图（qrcode-sph-square.jpg）：原图是竖版卡片，塞进 74px 的方形位
+// 会被压扁成一个"方疙瘩"，和另外两个方码明显不齐。
+async function buildWatermarkFooter() {
+  const [qr, gzhOk, sphOk] = await Promise.all([
+    makeWatermarkQR().catch(() => null),
+    imgExists('./qrcode-gzh.jpg'),
+    imgExists('./qrcode-sph-square.jpg'),
+  ]);
+  if (!qr && !gzhOk && !sphOk) return null;
+
+  const side = (src, label) =>
+    `<div class="wm-side"><img class="wm-qr-side" src="${src}" alt="${label}"><span>${label}</span></div>`;
+
+  const footer = document.createElement('div');
+  footer.className = 'report-watermark wm-tri';
+  footer.innerHTML = `
+    <div class="wm-text">
+      <strong>跑悟 · AI 跑步诊断</strong>
+      <span class="wm-sub">扫码生成你的专属跑步报告 · 跑得对，比跑得多更重要</span>
+    </div>
+    <div class="wm-codes">
+      ${gzhOk ? side('qrcode-gzh.jpg', '公众号') : '<div class="wm-side"></div>'}
+      ${qr ? `<div class="wm-main"><img class="wm-qr" src="${qr}" alt="扫码体验"><span>小程序</span></div>` : '<div class="wm-side"></div>'}
+      ${sphOk ? side('qrcode-sph-square.jpg', '视频号') : '<div class="wm-side"></div>'}
+    </div>
+  `;
+  return footer;
+}
+
+async function captureReport(label) {
+  showToast(label || '正在生成报告快照…');
+  await loadScript('./vendor/html2canvas.min.js');
+  const el = $('#reportBody');
+
+  // 导出前展开全部周计划：长图/PDF 必须包含 1-8 周完整内容，不能只截到当前展开的那一周
+  const planItems = $$('#reportBody .tl-item');
+  const wasOpen = [...planItems].map((it) => it.classList.contains('open'));
+  planItems.forEach((it) => it.classList.add('open'));
+
+  // 临时插入水印页脚：渲染进长图后立即移除，不影响页面本身
+  let footer = null;
+  try {
+    footer = await buildWatermarkFooter();
+    if (footer) el.appendChild(footer);
+  } catch (e) {
+    // 二维码失败不挡导出，最多没水印
+  }
+
+  // 超长报告限制画布总高度，避免 Canvas/jsPDF 超限导致导出的图片或 PDF 打不开。
+  // 原写法 Math.max(1, …) 让缩放永远 ≥ 1，这道闸门等于没装：报告一旦超过 14000px，
+  // 画布就被撑到超限，导出的图片/PDF 直接打不开。改为真正允许降到 1 以下，下限 0.5 防糊。
+  const maxCanvasH = 14000;
+  const scale = Math.max(0.5, Math.min(2, maxCanvasH / Math.max(el.offsetHeight, 1)));
+  try {
+    return await html2canvas(el, {
+      scale,
+      backgroundColor: '#F6F8F7',
+      useCORS: true,
+    });
+  } finally {
+    if (footer && footer.parentNode) footer.remove();
+    // 恢复用户原来的折叠状态，并同步"展开全部"按钮文案
+    planItems.forEach((it, i) => it.classList.toggle('open', wasOpen[i]));
+    const expandBtn = $('#expandAllWeeks');
+    if (expandBtn) expandBtn.textContent = wasOpen.every(Boolean) ? '收起全部' : '展开全部';
+  }
+}
+
+// 导出按钮 loading：大报告截取需数秒，避免用户以为没反应而连点
+async function withExportBusy(fn) {
+  const btns = [$('#btnExportImage'), $('#btnExportPdf')];
+  const originals = btns.map((b) => b.textContent);
+  btns.forEach((b) => { b.disabled = true; });
+  try {
+    await fn();
+  } finally {
+    btns.forEach((b, i) => { b.disabled = false; b.textContent = originals[i]; });
+  }
+}
+
+async function exportImage() {
+  try {
+    await withExportBusy(async () => {
+      $('#btnExportImage').textContent = '生成中…';
+      const canvas = await captureReport();
+      const dataURL = canvas.toDataURL('image/png');
+      if (isMobile) {
+        // 移动端 <a download> 不会存进相册：优先调起系统分享（可直接存相册或转发朋友圈）
+        canvas.toBlob(async (blob) => {
+          const file = blob ? new File([blob], '跑悟AI跑步报告.png', { type: 'image/png' }) : null;
+          // 微信里不试 share（webview 内无可靠实现，见 isWeChat 处说明），直接长按保存
+          if (file && !isWeChat && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ files: [file], title: '我的 AI 跑步报告' });
+              showToast('已保存或分享');
+              return;
+            } catch (e) {
+              if (e.name === 'AbortError') return; // 用户主动取消，不算失败
+            }
+          }
+          // 兜底：全屏预览，长按图片保存到相册
+          $('#shareImage').src = dataURL;
+          $('#shareOverlay').classList.remove('hidden');
+          showToast('长按图片即可保存到相册');
+        }, 'image/png');
+        return;
+      }
+      const a = document.createElement('a');
+      a.download = '跑悟AI跑步报告.png';
+      a.href = dataURL;
+      a.click();
+      showToast('长图已生成');
+    });
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function exportPdf() {
+  try {
+    await withExportBusy(async () => {
+      $('#btnExportPdf').textContent = '导出中…';
+      const canvas = await captureReport('正在导出 PDF…');
+      await loadScript('./vendor/jspdf.umd.min.js');
+      const { jsPDF } = window.jspdf;
+      const img = canvas.toDataURL('image/jpeg', 0.92);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const imgH = (canvas.height * pw) / canvas.width;
+      // 长报告按 A4 宽度分页拼接，而不是把整张长图塞进一页
+      let heightLeft = imgH;
+      let position = 0;
+      pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
+      heightLeft -= ph;
+      while (heightLeft > 0) {
+        position = heightLeft - imgH;
+        pdf.addPage();
+        pdf.addImage(img, 'JPEG', 0, position, pw, imgH);
+        heightLeft -= ph;
+      }
+      if (isMobile) {
+        const blob = pdf.output('blob');
+        if (isWeChat) {
+          // 微信 webview 存不了 blob 也靠不住 share，但能打开"真实 HTTP 地址的 PDF"：
+          // 把 PDF 送到自家服务端换个短时 URL，微信自带文件预览器会打开，
+          // 右上角菜单里可以保存 / 用其他应用打开 —— 这是在微信里拿到 PDF 文件的唯一可靠路径。
+          try {
+            const fd = new FormData();
+            fd.append('file', new File([blob], '跑悟AI跑步报告.pdf', { type: 'application/pdf' }));
+            const { url } = await request('/export/pdf', { body: fd, isForm: true });
+            // 优先新窗口（保住当前页面）；弹窗被拦时同窗跳转——顶层导航不受弹窗拦截影响
+            const w = window.open(url, '_blank');
+            if (!w) location.href = url;
+            showToast('已打开 PDF，可在右上角「…」菜单里保存或用其他应用打开');
+            return;
+          } catch (e) {
+            // 上传失败（服务端未重启/网络断）→ 退回长图预览，保证用户至少拿得到内容
+            $('#shareImage').src = canvas.toDataURL('image/png');
+            $('#shareOverlay').classList.remove('hidden');
+            showToast('PDF 传送失败，已生成长图，长按图片即可保存');
+            return;
+          }
+        }
+        // ① 优先系统分享（可直接转发或存到文件 App）；② 不支持分享就直接触发下载链接
+        const file = new File([blob], '跑悟AI跑步报告.pdf', { type: 'application/pdf' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({ files: [file], title: '我的 AI 跑步报告' });
+            showToast('PDF 已分享或保存');
+            return;
+          } catch (e) {
+            if (e.name === 'AbortError') return; // 用户主动取消
+            // 分享失败继续走下载兜底
+          }
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '跑悟AI跑步报告.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        showToast('PDF 已生成：若浏览器无下载反应，请改用「生成长图」长按图片保存');
+      } else {
+        pdf.save('跑悟AI跑步报告.pdf');
+        showToast('PDF 已生成');
+      }
+    });
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+$('#shareClose').addEventListener('click', () => $('#shareOverlay').classList.add('hidden'));
+
+// ---------- 趋势图 ----------
+async function loadTrends() {
+  const wrap = $('#trendWrap');
+  try {
+    const { series } = await request('/trends', { method: 'GET' });
+    const pts = (series || []).filter((s) => s.weekly_volume_km != null || s.avg_heart_rate != null);
+    if (pts.length < 2) {
+      wrap.classList.add('hidden');
+      return;
+    }
+    await loadScript('./vendor/echarts.min.js');
+    wrap.classList.remove('hidden');
+    const chart = echarts.init($('#trendChart'));
+    const labels = pts.map((s) => {
+      const d = new Date(s.date);
+      return `第${s.version}次 ${d.getMonth() + 1}/${d.getDate()}`;
+    });
+    chart.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['周跑量(km)', '平均心率'] },
+      grid: { left: 48, right: 48, top: 40, bottom: 32 },
+      xAxis: { type: 'category', data: labels, boundaryGap: false },
+      yAxis: [
+        { type: 'value', name: '周跑量' },
+        { type: 'value', name: '心率' },
+      ],
+      series: [
+        { name: '周跑量(km)', type: 'line', smooth: true, color: '#0F6E56', data: pts.map((s) => s.weekly_volume_km) },
+        { name: '平均心率', type: 'line', smooth: true, yAxisIndex: 1, color: '#B7791F', data: pts.map((s) => s.avg_heart_rate) },
+      ],
+    });
+  } catch (err) {
+    wrap.classList.add('hidden');
+  }
+}
+
+// ---------- 历史记录（分页） ----------
+let historyOffset = 0;
+const HISTORY_PAGE = 20;
+
+async function loadHistory(reset = true) {
+  try {
+    if (reset) {
+      historyOffset = 0;
+      $('#historyList').innerHTML = '';
+    }
+    const { records, has_more } = await request(
+      `/records?limit=${HISTORY_PAGE}&offset=${historyOffset}`,
+      { method: 'GET' }
+    );
+    historyOffset += records.length;
+
+    if (!records.length && historyOffset === 0) {
+      $('#historyList').innerHTML = '<p class="section-desc">还没有诊断记录，先去做一次数据诊断。</p>';
+      $('#loadMoreBtn').classList.add('hidden');
+      return;
+    }
+
+    $('#historyList').innerHTML += records
+      .map((r) => {
+        const summary = r.summary
+          || (r.status === 'failed' ? '分析失败，可删除后重试'
+            : r.status === 'done' ? '点击查看完整报告' : '分析进行中，请稍候');
+        const statusText = { done: '已完成', failed: '分析失败', pending: '分析中' }[r.status] || r.status;
+        const riskTag = r.risk_level ? `<span class="risk-tag risk-${esc(r.risk_level)}">${RISK_ICON[r.risk_level] || ''} ${esc(r.risk_level)}风险</span>` : '';
+        return `<div class="history-item" data-id="${r.id}">
+          <div><div class="ver">第 ${r.version} 次诊断 ${goalBadge(r.goal)} ${riskTag}</div>
+          <div class="meta">${new Date(r.created_at).toLocaleDateString('zh-CN')} · ${esc(summary)}</div></div>
+          <div class="history-actions">
+            <span class="status-${r.status}">${statusText}</span>
+            <button class="btn-del" data-del="${r.id}" title="删除该记录">删除</button>
+          </div>
+        </div>`;
+      })
+      .join('');
+
+    $('#loadMoreBtn').classList.toggle('hidden', !has_more);
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+$('#loadMoreBtn').addEventListener('click', () => loadHistory(false));
+
+$('#historyList').addEventListener('click', async (e) => {
+  // 删除按钮：单独处理，不触发查看
+  const delBtn = e.target.closest('[data-del]');
+  if (delBtn) {
+    const id = delBtn.dataset.del;
+    const item = delBtn.closest('.history-item');
+    // 用自定义弹窗，不用原生 confirm：连续调用会被浏览器节流甚至变成"关闭网页"对话框
+    const ok = await confirmDialog('确认删除这条诊断记录？删除后不可恢复，报告和历史对比都会少这一条。', { title: '删除记录' });
+    if (!ok) return;
+    delBtn.disabled = true;
+    delBtn.textContent = '删除中…';
+    try {
+      await request('/records/' + id, { method: 'DELETE' });
+      if (item) item.remove();
+      // 删的是列表最后一条时，提示清空态
+      if (!$('#historyList').children.length) {
+        $('#historyList').innerHTML = '<p class="section-desc">还没有诊断记录，先去做一次数据诊断。</p>';
+        $('#loadMoreBtn').classList.add('hidden');
+      }
+      showToast('记录已删除');
+      // 首页统计可能变化，静默刷新
+      loadHome();
+    } catch (err) {
+      showToast(err.message, true);
+      delBtn.disabled = false;
+      delBtn.textContent = '删除';
+    }
+    return;
+  }
+
+  const item = e.target.closest('.history-item');
+  if (!item) return;
+  openRecord(item.dataset.id);
+});
+
+// 退出页的"重新进入"：整页重来一遍，回到登录态首页
+$('#btnReenter').addEventListener('click', () => location.reload());
+
+// ---------- 启动 ----------
+// 有缓存令牌就立刻武装返回守卫，不等 /auth/me 回来：
+// 免密进入时首屏那一两秒里用户已经在用，那时滑动边缘同样不能被直接掉出程序
+if (state.token) armBackGuard();
+
+(async function bootstrap() {
+  // 邀请链接带 ?invite=XXX：自动切到注册页并预填邀请码，对方只需填手机号和密码
+  const inviteCode = new URLSearchParams(location.search).get('invite');
+  if (inviteCode && !state.token) {
+    switchAuth('register');
+    $('#inviteCode').value = inviteCode.trim();
+    showToast('已填入邀请码 ' + inviteCode.trim() + '，请直接注册');
+    // 预填后清掉地址栏参数，避免截图分享时泄露邀请码
+    history.replaceState(null, '', location.pathname);
+  }
+  if (!state.token) return show('auth');
+  try {
+    const { user } = await request('/auth/me', { method: 'GET' });
+    setLogged(user);
+    show('home');
+    loadHome();
+  } catch (e) {
+    logout();
+  }
+})();

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>垫图重绘对比：真实照片 → 扁平插画（以深蹲为例）</title>
+<style>
+  body{margin:0;min-height:100vh;background:#20262B;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#E8EDF0;display:flex;flex-direction:column;align-items:center;padding:30px 16px;box-sizing:border-box}
+  h1{font-size:19px;font-weight:700;margin:0 0 6px}
+  p.sub{margin:0 0 26px;font-size:13px;color:#9AA7AE}
+  .row{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;max-width:1060px}
+  .card{background:#F6F8F9;border-radius:16px;padding:16px 16px 10px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  .card h2{margin:0 0 4px;font-size:13px;color:#5B6B62;text-align:center;font-weight:600}
+  .card img,.card object{display:block;width:330px;max-width:86vw;height:auto;border-radius:10px}
+  .card .tag{display:inline-block;margin:8px auto 4px;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700}
+  .ref .tag{background:#FEF6E7;color:#B7791F}
+  .old .tag{background:#E7E2D8;color:#8A8474}
+  .new .tag{background:#DFF2E8;color:#2F8F6B}
+  .note{margin-top:26px;max-width:760px;font-size:12.5px;line-height:1.9;color:#9AA7AE;background:#28303A;border-radius:12px;padding:15px 20px}
+  .note b{color:#C9D6DC}
+</style>
+</head>
+<body>
+  <h1>垫图重绘对比（以「深蹲」为例）</h1>
+  <p class="sub">姿势逐关节照着真实照片画的扁平插画 —— 满意这套流程就批量重绘 18 张</p>
+  <div class="row">
+    <div class="card ref">
+      <h2>① 真实照片参考（垫图）</h2>
+      <img src="learn-media/ref-squat.jpg" alt="真实深蹲照片">
+      <span class="tag"> Freepik 类素材站 · 真人标准姿势</span>
+    </div>
+    <div class="card old">
+      <h2>② 现有矢量图</h2>
+      <img src="learn-media/14-squat.svg" alt="现有深蹲矢量图">
+      <span class="tag">当前线上版本</span>
+    </div>
+    <div class="card new">
+      <h2>③ 照片垫图重绘（扁平插画）</h2>
+      <object type="image/svg+xml" data="learn-media/14-squat-ref.svg" style="width:330px;max-width:86vw"></object>
+      <span class="tag">按照片关节位重绘 · 动画保留</span>
+    </div>
+  </div>
+  <div class="note">
+    <b>③ 的姿势直接来自 ①：</b>大腿平行地面、小腿垂直（膝盖不过脚尖）、髋部向后坐、躯干前倾 35°、
+    双臂前平举——每个关节坐标都按照片人物比例映射绘制，不再是抽象火柴人。
+    动画（下蹲起伏）、粒子、玻璃标签、场景全部保留，文字避开人物不遮挡。
+    <b>流程说明：</b>每张图先检索对应的真实动作照片/GIF 作为姿势参考，再照着重绘（相当于人工垫图；
+    本环境无法直接跑 ControlNet，但逐关节对照照片的效果等价）。确认满意后按此流程重绘全部 18 张，
+    原图始终有备份可回滚。
+  </div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+﻿=== PID 37352 identity ===
+
+
+ProcessId   : 37352
+Name        : node.exe
+CommandLine : node  api/index.js
+
+
+
+=== cpolar processes detail ===
+
+
+ProcessId    : 4844
+CreationDate : 2026/9/20 10:27:55
+CommandLine  : 
+
+ProcessId    : 25168
+CreationDate : 2026/9/27 21:22:42
+CommandLine  : 
+
+
+
+=== cpolar config ===
+True
+authtoken: ZmMzYTg0ZjAtNTUzYi00ZWFhLWEzNmQtNzM3OWRmODA3OTA1
+tunnels:
+  As-naming:
+    id: 84e5f699-a104-4c75-a304-95ab5913a878
+    subdomain: As-naming
+    proto: http
+    addr: "3210"
+    inspect: "false"
+    bind_tls: both
+    region: cn_top
+    disable_keep_alives: "false"
+    redirect_https: "false"
+    start_type: enable
+  Healthy-run:
+    id: 23621dc5-46f3-44e4-b41c-5f64325e6fc9
+    subdomain: Healthy-run
+    proto: http
+    addr: "3000"
+    inspect: "false"
+    bind_tls: both
+    region: cn_top
+    disable_keep_alives: "false"
+    redirect_https: "false"
+    start_type: enable
+  health-app:
+    id: f3cb1b9f-4833-4d6d-b78e-0d7e74d092f5
+    proto: http
+    addr: "3000"
+    inspect: "false"
+    bind_tls: both
+    region: cn_top
+    disable_keep_alives: "false"
+    redirect_https: "false"
+    start_type: enable
+  remoteDesktop:
+    id: 4bbffe1c-a2e6-4ee0-9f8a-56a49770bb8a
+    proto: tcp
+    addr: "3389"
+    bind_tls: both
+    start_type: enable
+  website:
+    id: e0ce3ae5-6759-4b2f-8d92-ff537886398c
+    proto: http
+    addr: "8080"
+    bind_tls: both
+    start_type: enable
+email: 125316403@qq.com
+=== DONE ===

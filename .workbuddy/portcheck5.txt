@@ -1,0 +1,212 @@
+﻿=== pm2 env as-naming (id 1) ===
+ZCODE_WINDOWS_APP_INSTALL_DIR: C:\Users\Lenovo\AppData\Local\Programs\ZCode
+ZCODE_UGREP_BINARY: C:\Users\Lenovo\AppData\Local\Programs\ZCode\resources\tools\ugrep\ugrep.exe
+ZCODE_RUNTIME_ENV: production
+ZCODE_RG_BINARY: C:\Users\Lenovo\AppData\Local\Programs\ZCode\resources\tools\ripgrep\rg.exe
+ZCODE_PROCESS_LABEL: local-1
+ZCODE_PERSONAL_PROVIDER_CONFIG_FILE: C:\Users\Lenovo\.zcode\v2\provider_config.json
+ZCODE_ENV: production
+ZCODE_DESKTOP_CONTEXT_PROMPT_ENABLED: 1
+ZCODE_BUILTIN_PROVIDER_CONFIG_FILE: C:\Users\Lenovo\.zcode\v2\runtime\provider\windows-x86_64\3.12.3\endpoint-78d7c3bef4024722642626fe3669a799\zcode-builtin.json
+ZCODE_BUILD_COMMIT_ID: d7f8ea37
+ZCODE_BASE_URL: https://zcode.z.ai
+ZCODE_APP_VERSION: 3.12.3
+ZAI_OAUTH_ORIGIN: https://chat.z.ai
+ZAI_OAUTH_CLIENT_ID: client_P8X5CMWmlaRO9gyO-KSqtg
+ZAI_BUSINESS_BASE_URL: https://api.z.ai
+PROMPT: $P$G
+PORT: 3210
+LC_CTYPE: C.UTF-8
+CHROME_CRASHPAD_PIPE_NAME: \\.\pipe\crashpad_26164_ZQKOJSHBYTQAVAWY
+_tree_pids: 24512
+node_version: 24.14.0
+version: 1.0.0
+unique_id: 5d3c4428-687c-455b-8836-f9c469d1a1f7
+PM2_HOME: C:\Users\Lenovo\.pm2
+LSBOX_SHMEM_MUTEX: Local\LiteSandbox_25664_624c7a59-97b9-49a1-8ed5-5950f2c98b69_Mtx
+LSBOX_AUDIT_SHMEM: Local\LiteSandbox_Audit_25664_99476953
+LSBOX_SHMEM_NAME: Local\LiteSandbox_25664_624c7a59-97b9-49a1-8ed5-5950f2c98b69
+https_proxy: http://127.0.0.1:14002
+http_proxy: http://127.0.0.1:14002
+HTTPS_PROXY: http://127.0.0.1:14002
+HTTP_PROXY: http://127.0.0.1:14002
+TENCENT_DOCS_LOCAL_SERVER: http://127.0.0.1:39099
+CODEBUDDY_DISABLE_EXTENDED_PLUGIN_HOOKS: 1
+GALILEO_ENABLE: true
+CODEBUDDY_CONVERSATION_MESSAGE_ID: e7549c98a2314ead9cc5ce8b75dd7e01
+PROCESSOR_REVISION: 5000
+ALLUSERSPROFILE: C:\ProgramData
+CODEBUDDY_INCLUDE_TOPIC_MESSAGE: 1
+CODEBUDDY_DISABLE_IDE: 1
+CODEBUDDY_CODE_IMAGE_COMPRESSION_MAX_DIMENSION: 1080
+CODEBUDDY_TOOL_CALL_ID: chatcmpl-tool-be8cb53b5f06d29d
+COMPUTERNAME: DESKTOP-TO86RLE
+CLAUDE_SESSION_ID: 624c7a59-97b9-49a1-8ed5-5950f2c98b69
+IN_DOCKER: 1
+WORKBUDDY_STARTUP_DATE: 2026-09-20
+asl.log: Destination=file
+WORKBUDDY_STARTUP_TIME: 102820
+WORKBUDDY_APP_VERSION: 5.5.6
+TMPDIR: C:\Users\Lenovo\AppData\Local\Temp
+SERVER__HOST: 127.0.0.1
+CODEBUDDY_SKILL_TOOL_CHAR_BUDGET: 30000
+CODEBUDDY_SAFE_DELETE_BULK_GUARD: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\safe-delete-bulk-guard.cjs
+CM2014DIR: C:\Program Files (x86)\Common Files\Autodesk Shared\Materials\
+MANPAGER: cat
+CODEBUDDY_SAFE_DELETE_ENABLED: 1
+CLIENT_INFO_USER_AGENT_EXTENSION: CLI/2.137.1
+PLAYWRIGHT_MCP_NO_SANDBOX: 1
+CODEBUDDY_SAFE_DELETE_BROKER_DELETE: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\safe-delete-broker-delete.cjs
+CODEBUDDY_REPLAY_SHOW_PRE_COMPACT: 1
+WORKBUDDY_STARTUP_PID: 12024
+CLIENT_INFO_PLATFORM_VERSION: 5.5.6
+ProgramW6432: C:\Program Files
+CODEBUDDY_MCP_CONFIG: {"mcpServers":{"connector-proxy":{"type":"http","url":"http://127.0.0.1:12596/mcp","headers":{"Authorization":"Bearer OzeZLUjXidF9tWfSS5JtpGm2QMHJHDVzMx9MDaPjAD8","X-WorkBuddy-MCP-Context":"eyJzZXNzaW9uSWQiOiI2MjRjN2E1OS05N2I5LTQ5YTEtOGVkNS01OTUwZjJjOThiNjkiLCJ3ZWxjb21lTW9kZSI6IndvcmtpbmciLCJ3b3Jrc3BhY2UiOiJDOlxcVXNlcnNcXExlbm92b1xcV29ya0J1ZGR5XFzlgaXlurfot5HnqIvluo8iLCJhbGxvd2VkQnVpbHRpblRvb2xzIjpbImFnZW50X21haWxfZG93bmxvYWRfYXR0YWNobWVudCIsImFnZW50X21haWxfdXBsb2FkX2F0dGFjaG1lbnQiLCJhZ2VudGljX3NlYXJjaCIsImF1dG9tYXRpb25fdXBkYXRlIiwiY29ubmVjdF9jbG91ZF9zZXJ2aWNlIiwiY29ubmVjdF9vcGVuX3BsYXRmb3JtIiwiY29udmVyc2F0aW9uX3NlYXJjaCIsInByZXNlbnRfZmlsZXMiLCJyZWFkX21lIiwic2VhcmNoX3BsdWdpbnMiLCJzaG93X3dpZGdldCIsInN1Z2dlc3RfcGx1Z2luX2luc3RhbGwiLCJ3b3JrYnVkZHlfY2xvdWRfc2VydmljZSIsIndvcmtidWRkeV9tYXJrZXRwbGFjZV9za2lsbCIsIndvcmtidWRkeV9zaXRlc19kZXBsb3kiLCJ3b3JrYnVkZHlfc2l0ZXNfdW5wdWJsaXNoIl19.pb5oMQQA609xMX9BPNcuCCvmsE8eP78r16upmJim3Dw"},"defer_loading":false,"tools":{"automation_update":{"bare_name":true,"defer_loading":false},"present_files":{"bare_name":true,"defer_loading":false},"connect_cloud_service":{"bare_name":true,"defer_loading":true},"connect_open_platform":{"bare_name":true,"defer_loading":true},"read_me":{"bare_name":true,"defer_loading":false},"show_widget":{"bare_name":true,"defer_loading":false},"workbuddy_sites_deploy":{"bare_name":true,"defer_loading":true},"workbuddy_sites_unpublish":{"bare_name":true,"defer_loading":true},"workbuddy_cloud_service":{"bare_name":true,"defer_loading":true},"workbuddy_marketplace_skill":{"bare_name":true,"defer_loading":true},"agentic_search":{"bare_name":true,"defer_loading":true},"conversation_search":{"bare_name":true,"defer_loading":true},"search_plugins":{"bare_name":true,"defer_loading":true},"suggest_plugin_install":{"bare_name":true,"defer_loading":true},"agent_mail_upload_attachment":{"bare_name":true,"defer_loading":true},"agent_mail_download_attachment":{"bare_name":true,"defer_loading":true}},"transparent_proxy":true,"builtin_tools":["automation_update","present_files","connect_cloud_service","connect_open_platform","read_me","show_widget","workbuddy_sites_deploy","workbuddy_sites_unpublish","workbuddy_cloud_service","workbuddy_marketplace_skill","agentic_search","conversation_search","search_plugins","suggest_plugin_install","agent_mail_upload_attachment","agent_mail_download_attachment"]},"agent-mail":{"type":"http","url":"http://127.0.0.1:12596/a9bcc7dd302f2b262507f7590d97b1b4/mcp","headers":{"Authorization":"Bearer zHVto3YhRUpKCzUBb-dU0mgKLJBoDqBBHrDheHYdc1w","X-WorkBuddy-MCP-Context":"eyJzZXNzaW9uSWQiOiI2MjRjN2E1OS05N2I5LTQ5YTEtOGVkNS01OTUwZjJjOThiNjkiLCJ3ZWxjb21lTW9kZSI6IndvcmtpbmciLCJ3b3Jrc3BhY2UiOiJDOlxcVXNlcnNcXExlbm92b1xcV29ya0J1ZGR5XFzlgaXlurfot5HnqIvluo8iLCJhbGxvd2VkQnVpbHRpblRvb2xzIjpbImFnZW50X21haWxfZG93bmxvYWRfYXR0YWNobWVudCIsImFnZW50X21haWxfdXBsb2FkX2F0dGFjaG1lbnQiLCJhZ2VudGljX3NlYXJjaCIsImF1dG9tYXRpb25fdXBkYXRlIiwiY29ubmVjdF9jbG91ZF9zZXJ2aWNlIiwiY29ubmVjdF9vcGVuX3BsYXRmb3JtIiwiY29udmVyc2F0aW9uX3NlYXJjaCIsInByZXNlbnRfZmlsZXMiLCJyZWFkX21lIiwic2VhcmNoX3BsdWdpbnMiLCJzaG93X3dpZGdldCIsInN1Z2dlc3RfcGx1Z2luX2luc3RhbGwiLCJ3b3JrYnVkZHlfY2xvdWRfc2VydmljZSIsIndvcmtidWRkeV9tYXJrZXRwbGFjZV9za2lsbCIsIndvcmtidWRkeV9zaXRlc19kZXBsb3kiLCJ3b3JrYnVkZHlfc2l0ZXNfdW5wdWJsaXNoIl19.pb5oMQQA609xMX9BPNcuCCvmsE8eP78r16upmJim3Dw"},"defer_loading":true},"genie-baas":{"type":"http","url":"http://127.0.0.1:12596/881f8b0f3d2c03fadb7743e0aaca8a28/mcp","headers":{"Authorization":"Bearer ACtI3ZzY0pBzcXH3xHMSaw9YwCJ5xSZrGyl_mExdOp8","X-WorkBuddy-MCP-Context":"eyJzZXNzaW9uSWQiOiI2MjRjN2E1OS05N2I5LTQ5YTEtOGVkNS01OTUwZjJjOThiNjkiLCJ3ZWxjb21lTW9kZSI6IndvcmtpbmciLCJ3b3Jrc3BhY2UiOiJDOlxcVXNlcnNcXExlbm92b1xcV29ya0J1ZGR5XFzlgaXlurfot5HnqIvluo8iLCJhbGxvd2VkQnVpbHRpblRvb2xzIjpbImFnZW50X21haWxfZG93bmxvYWRfYXR0YWNobWVudCIsImFnZW50X21haWxfdXBsb2FkX2F0dGFjaG1lbnQiLCJhZ2VudGljX3NlYXJjaCIsImF1dG9tYXRpb25fdXBkYXRlIiwiY29ubmVjdF9jbG91ZF9zZXJ2aWNlIiwiY29ubmVjdF9vcGVuX3BsYXRmb3JtIiwiY29udmVyc2F0aW9uX3NlYXJjaCIsInByZXNlbnRfZmlsZXMiLCJyZWFkX21lIiwic2VhcmNoX3BsdWdpbnMiLCJzaG93X3dpZGdldCIsInN1Z2dlc3RfcGx1Z2luX2luc3RhbGwiLCJ3b3JrYnVkZHlfY2xvdWRfc2VydmljZSIsIndvcmtidWRkeV9tYXJrZXRwbGFjZV9za2lsbCIsIndvcmtidWRkeV9zaXRlc19kZXBsb3kiLCJ3b3JrYnVkZHlfc2l0ZXNfdW5wdWJsaXNoIl19.pb5oMQQA609xMX9BPNcuCCvmsE8eP78r16upmJim3Dw"},"defer_loading":true},"weixinpay":{"type":"stdio","command":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\weixinpay\\1.6.109/bin/run-node","args":["C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\weixinpay\\1.6.109/dist/mcp-server.mjs"],"env":{"WECHATPAY_PAYSIGN_SERVICE_ID":"agentpay","CLAUDE_PLUGIN_ROOT":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\weixinpay\\1.6.109","CODEBUDDY_PLUGIN_ROOT":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\weixinpay\\1.6.109","CLAUDE_PLUGIN_DATA":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\data\\weixinpay-workbuddy-builtin","CODEBUDDY_PLUGIN_DATA":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\data\\weixinpay-workbuddy-builtin","CODEBUDDY_PROJECT_DIR":"C:\\Users\\Lenovo\\WorkBuddy\\鍋ュ悍璺戠▼搴?,"CLAUDE_PROJECT_DIR":"C:\\Users\\Lenovo\\WorkBuddy\\鍋ュ悍璺戠▼搴?},"defer_loading":true},"sheetagent":{"type":"stdio","command":"node","args":["C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\sheetagent\\5.5.6-wb.38337834.g5f969292.h4918b5ced607/mcp/start.mjs"],"env":{"SHEETAGENT_MCP_TRANSPORT":"stdio","SHEET_MCP_DEBUG":"0","SHEETAGENT_LOG_LEVEL":"info","SHEET_API_MODE":"local","SHEET_REMOTE_MCP_URL":"https://docs.qq.com/api/v6/sheet/mcp","CLAUDE_PLUGIN_ROOT":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\sheetagent\\5.5.6-wb.38337834.g5f969292.h4918b5ced607","CODEBUDDY_PLUGIN_ROOT":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\cache\\workbuddy-builtin\\sheetagent\\5.5.6-wb.38337834.g5f969292.h4918b5ced607","CLAUDE_PLUGIN_DATA":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\data\\sheetagent-workbuddy-builtin","CODEBUDDY_PLUGIN_DATA":"C:\\Users\\Lenovo\\.workbuddy\\plugins\\data\\sheetagent-workbuddy-builtin","CODEBUDDY_PROJECT_DIR":"C:\\Users\\Lenovo\\WorkBuddy\\鍋ュ悍璺戠▼搴?,"CLAUDE_PROJECT_DIR":"C:\\Users\\Lenovo\\WorkBuddy\\鍋ュ悍璺戠▼搴?},"defer_loading":true}}}
+WORKBUDDY_DAEMON_CATALOG_STDIO: 1
+WORKBUDDY_CONFIG_DIR: C:\Users\Lenovo\.workbuddy
+CODEBUDDY_DISABLE_CRON: 1
+PUBLIC: C:\Users\Public
+CODEBUDDY_HOST: workbuddy-desktop
+CODEBUDDY_QIMEI36: a8d2d935a38926333401a57f300018a1771c
+PATHEXT: .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+AGENT_BROWSER_ARGS: --no-sandbox
+PAGER: cat
+GIT_PAGER: cat
+CODEBUDDY_DISABLE_FORK_SUBAGENT: 1
+PYTHONIOENCODING: utf-8
+WORKBUDDY_NODE_ENV: production
+AWS_PAGER: 
+WORKBUDDY_APP_NAME: WorkBuddy
+WORKBUDDY_APP_PATH: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar
+CODEBUDDY_GATEWAY_PASSWORD: x-dmhJL-ZSq6BgBNgKY-3V3AC0AD_OX6Cn_7Jq1BCpw
+BAGGAGE: codebuddy.session_id=624c7a59-97b9-49a1-8ed5-5950f2c98b69,codebuddy.conversation_request_id=4d0f48c75144418285527f3cb356dc6b,codebuddy.conversation_message_id=e7549c98a2314ead9cc5ce8b75dd7e01
+WORKBUDDY_PAC_RPC_SOCKET: \\.\pipe\workbuddy-pac-18744-5fbc362fd92cb94c
+WORKBUDDY_APPLICATION_NAME: WorkBuddy
+ILBDIR: C:\Program Files (x86)\Common Files\Autodesk Shared\Materials\
+CODEBUDDY_SAFE_DELETE_BULK_THRESHOLD: 50
+CODEBUDDY_CODE_DISABLE_SESSION_SUMMARY: 1
+CODEBUDDY_ENABLE_SECURITY_AUDIT: 1
+CODEBUDDY_SAFE_DELETE_REPORT_PATH: C:\Users\Lenovo\AppData\Local\Temp\codebuddy-safe-delete\report-24580-1789970739202-6onbqfkpv8f.jsonl
+OS: Windows_NT
+CODEBUDDY_CODE_GIT_BASH_PATH: C:\Users\Lenovo\.workbuddy\binaries\PortableGit\versions\1.2.0\bin\bash.exe
+CLIENT_INFO_PRODUCT_NAME: WorkBuddy
+PATH: C:\Windows\system32;C:\Users\Lenovo\AppData\Local\Microsoft\WindowsApps;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\ManagementStudio\;C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\;C:\Program Files\Microsoft SQL Server\110\Tools\Binn\;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\PrivateAssemblies\;C:\Program Files (x86)\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\Lenovo\AppData\Roaming\npm;C:\Users\Lenovo\.local\bin;C:\Users\Lenovo\.workbuddy\bin\ffmpeg;C:\Program Files\cpolar\;C:\Users\Lenovo\AppData\Local\Programs\ZCode\resources\tools\ripgrep;C:\Users\Lenovo\AppData\Local\Programs\ZCode\resources\tools\ugrep;C:\Program Files\nodejs
+CLIENT_INFO_MACHINE_ID: ce04797a-9502-4289-a68c-84d45e6befa5
+FPS_BROWSER_USER_PROFILE_STRING: Default
+ACC_PRODUCT_CONFIG_PATH: C:\Users\Lenovo\AppData\Local\Temp\workbuddy-product-spill-UhXf5J\acc-product-config-v3.json
+USERDOMAIN_ROAMINGPROFILE: DESKTOP-TO86RLE
+CODEBUDDY_CODE_EXPERIMENTAL_AGENT_TEAMS: 0
+ProgramFiles(x86): C:\Program Files (x86)
+CODEBUDDY_HIGH_CREDIT_APPROVAL_ENABLED: 1
+editor_sdk_port: 39099
+CODEBUDDY_SKILL_DESC_MAX_OVERRIDES: {"tencent-docs-routing":300,"tencent-pptx":300,"tencent-docx":300,"tencent-docs-sheet-generation":300,"tencent-docs-sheetagent":300}
+ProgramData: C:\ProgramData
+WORKBUDDY_USER_DATA_DIR: C:\Users\Lenovo\.workbuddy\app
+WORKBUDDY_RESOURCES_PATH: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources
+OneDriveConsumer: C:\Users\Lenovo\OneDrive
+CODEBUDDY_DISABLE_SYSTEM_REMINDER_MD: 1
+TRACEPARENT: 00-4d0f48c75144418285527f3cb356dc6b-416b437fb26c1467-01
+TENCENT_DOCS_LOCAL_MCP: http://127.0.0.1:39099/mcp
+SESSIONNAME: Console
+NUMBER_OF_PROCESSORS: 12
+CODEBUDDY_PROMPT_SUGGESTION_DISABLED: 1
+CODEBUDDY_FORCE_HEADLESS_BUNDLE: 1
+CODEBUDDY_POWERSHELL_USE_PTY: 1
+CLIENT_INFO_IDE_TYPE: WorkBuddy
+PYTHONPATH: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim
+GALILEO_SDK_READY: 1
+BASH_ENV: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\safe-bin\safe-delete-bash-env.sh
+PROCESSOR_LEVEL: 25
+CODEBUDDY_GATEWAY_DISABLE_API_DOCS: 1
+WORKBUDDY_FS_PROTECTION_ROLE: daemon
+ProgramFiles: C:\Program Files
+PSModulePath: C:\Program Files\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules;C:\Program Files (x86)\Microsoft SQL Server\110\Tools\PowerShell\Modules\
+ELECTRON_RUN_AS_NODE: 1
+DISABLE_AUTOUPDATER: 1
+CODEBUDDY_SAFE_DELETE_BULK_STATE_DIR: C:\Users\Lenovo\AppData\Local\Temp\codebuddy-safe-delete-bulk
+CODEBUDDY_CONFIG_DIR: C:\Users\Lenovo\.workbuddy
+WORKBUDDY_PRODUCT_NAME: WorkBuddy
+CommonProgramFiles(x86): C:\Program Files (x86)\Common Files
+CODEBUDDY_SESSION_ID: 624c7a59-97b9-49a1-8ed5-5950f2c98b69
+CODEBUDDY_SKIP_GIT_BASH_CHECK: 1
+BROWSER_USE_CHROMIUM_SANDBOX: false
+CODEBUDDY_CONVERSATION_REQUEST_ID: 4d0f48c75144418285527f3cb356dc6b
+CLIENT_INFO_PRODUCT_VERSION: 5.5.6
+CLIENT_INFO_PLUGIN_NAME: workbuddy-desktop
+CODEBUDDY_PROJECT_DIR: /c/Users/Lenovo/WorkBuddy/鍋ュ悍璺戠▼搴?WORKBUDDY_EXTRA_PATHS: C:\Users\Lenovo\.workbuddy\binaries\node\versions\22.22.2-3;C:\Users\Lenovo\.workbuddy\binaries\node\versions\.locks;C:\Users\Lenovo\.workbuddy\binaries\python\versions\3.13.12;C:\Users\Lenovo\.workbuddy\binaries\python\versions\.locks;C:\Users\Lenovo\.workbuddy\binaries\node\cli-connector-packages;C:\Users\Lenovo\.workbuddy\binaries\python\envs\default\Scripts
+CODEBUDDY_REASONING_ONLY_END_TURN: 1
+PYTHONDONTWRITEBYTECODE: 1
+PROCESSOR_IDENTIFIER: AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD
+CLIENT_INFO_PLUGIN_VERSION: 5.5.6
+OneDrive: C:\Users\Lenovo\OneDrive
+LESSHISTFILE: -
+CODEBUDDY_BUILTIN_SKILLS_DIR: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\resources\plugins\workbuddy-builtin\skills
+CODEBUDDY_GIT_REPO_SCAN_DISABLED: 1
+WORKBUDDY_PAC_RPC_TOKEN: mxk5g9-uVWkFnT-o6rVcIKCrH7Fw5TLF
+WORKBUDDY_DATA_FOLDER_NAME: .workbuddy
+PYTHONUTF8: 1
+CODEBUDDY_DISABLE_SESSION_HISTORY_CLEANUP: 1
+CODEBUDDY_SAFE_DELETE_BIN_DIR: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\cli\vendor\shim\safe-bin
+CODEBUDDY_INTERNET_ENVIRONMENT: internal
+ComSpec: C:\Windows\system32\cmd.exe
+WORKBUDDY_MENU_LOCALE: zh-CN
+APPDATA: C:\Users\Lenovo\AppData\Roaming
+CommonProgramFiles: C:\Program Files\Common Files
+CODEBUDDY_DISABLE_AUTO_MEMORY: 1
+SERVER__PORT: 13964
+CODEBUDDY_GATEWAY_AUTH: password
+NO_UPDATE_NOTIFIER: 1
+CODEBUDDY_API_KEY_HELPER_DISABLED: 1
+CODEBUDDY_NODE_BIN: C:\Users\Lenovo\.workbuddy\binaries\node\versions\22.22.2-3\node.exe
+WORKBUDDY_LOCALE: zh-CN
+WORKBUDDY_IS_PACKAGED: 1
+CLAUDE_PROJECT_DIR: /c/Users/Lenovo/WorkBuddy/鍋ュ悍璺戠▼搴?CPOLAR_HOME: C:\Program Files\cpolar\
+CLIENT_INFO_PLATFORM: WorkBuddy
+SYSTEMD_PAGER: cat
+CODEBUDDY_SAFE_DELETE_SANDBOX: 1
+PROCESSOR_ARCHITECTURE: AMD64
+LANG: C.UTF-8
+DokanLibrary2: C:\Program Files\Dokan\DokanLibrary-2.0.6\
+WORKBUDDY_PROMPT_TEMPLATES_DIR: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\app.asar.unpacked\resources\templates
+FPS_BROWSER_APP_PROFILE_STRING: Internet Explorer
+CODEBUDDY_HOST_CAPABILITIES: elicitation.form,weixinpay.interception
+CommonProgramW6432: C:\Program Files\Common Files
+HGPAGER: cat
+CODEBUDDY_DISABLE_REQUEST_VALIDATION: 1
+ORIGINAL_XDG_CURRENT_DESKTOP: undefined
+GENIE_TRASH_DIR: C:\Users\Lenovo\AppData\Local\Programs\WorkBuddy\resources\vendor\genie-trash
+DriverData: C:\Windows\System32\Drivers\DriverData
+MSYS: winsymlinks:nativestrict
+TERM: dumb
+GIT_TERMINAL_PROMPT: 0
+LESSCHARSET: utf-8
+LC_ALL: C.UTF-8
+windir: C:\Windows
+USERPROFILE: C:\Users\Lenovo
+USERNAME: Lenovo
+USERDOMAIN: DESKTOP-TO86RLE
+TMP: C:\Users\Lenovo\AppData\Local\Temp
+TEMP: C:\Users\Lenovo\AppData\Local\Temp
+SystemRoot: C:\Windows
+SystemDrive: C:
+PWD: C:\Users\Lenovo\WorkBuddy\As-naming
+PM2_USAGE: CLI
+Path: C:\Users\Lenovo\.workbuddy\binaries\node\versions\22.22.2-3;C:\Users\Lenovo\.workbuddy\binaries\node\versions\.locks;C:\Windows\system32;C:\Users\Lenovo\AppData\Local\Microsoft\WindowsApps;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\ManagementStudio\;C:\Program Files (x86)\Microsoft SQL Server\110\Tools\Binn\;C:\Program Files\Microsoft SQL Server\110\Tools\Binn\;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\PrivateAssemblies\;C:\Program Files (x86)\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files\Microsoft SQL Server\110\DTS\Binn\;C:\Program Files\nodejs\;C:\Program Files\dotnet\;C:\Users\Lenovo\AppData\Local\Microsoft\WindowsApps;C:\Users\Lenovo\AppData\Roaming\npm;C:\Users\Lenovo\.local\bin;C:\Users\Lenovo\.workbuddy\bin\ffmpeg;C:\Program Files\cpolar\
+NODE_OPTIONS: 
+MSYS_NO_PATHCONV: 1
+MSYS2_ARG_CONV_EXCL: *
+LOGONSERVER: \\DESKTOP-TO86RLE
+LOCALAPPDATA: C:\Users\Lenovo\AppData\Local
+HOMEPATH: \Users\Lenovo
+HOMEDRIVE: C:
+NODE_APP_INSTANCE: 0
+vizion_running: false
+km_link: false
+cwd: C:\Users\Lenovo\WorkBuddy\As-naming
+namespace: default
+=== simulate one-click SN probe (cmd-style) ===
+probe 3210 => fail
+probe 8080 => 200 RUNNING
+probe 8888 => fail
+probe 4321 => fail
+=== DONE ===

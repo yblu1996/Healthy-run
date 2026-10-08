@@ -1,0 +1,2 @@
+不带邀请码: status=400 error=请输入邀请码
+带邀请码: status=200 quota=3 token=有

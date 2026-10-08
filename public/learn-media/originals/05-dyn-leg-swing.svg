@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" role="img" aria-label="undefined">
+<style>text{font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;}text{fill:#7E8C85;font-size:12px}</style>
+
+  <line x1="24" y1="170" x2="296" y2="170" stroke="#D5E0DA" stroke-width="3" stroke-linecap="round"/>
+  <line x1="243" y1="28" x2="243" y2="170" stroke="#D5E0DA" stroke-width="5" stroke-linecap="round"/>
+  <line x1="236" y1="28" x2="236" y2="170" stroke="#D5E0DA" stroke-width="2" stroke-linecap="round"/>
+  <line x1="173" y1="64" x2="170" y2="102" stroke="#33413A" stroke-width="6" stroke-linecap="round"></line>
+  <line x1="173" y1="68" x2="183.3" y2="86.3" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="183.3" y1="86.3" x2="176" y2="106" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="173" y1="68" x2="196" y2="66" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="196" y1="66" x2="218" y2="64" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="170" y1="102" x2="170" y2="133" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="170" y1="133" x2="170" y2="164" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="170" y1="164" x2="182.5" y2="167.4" stroke="#33413A" stroke-width="4" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="170" y1="102" x2="195.3" y2="119.9" stroke="#2F8F6B" stroke-width="5" stroke-linecap="round"><animate attributeName="x2" values="195.3;149;195.3" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="119.9;125;119.9" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <line x1="195.3" y1="119.9" x2="212" y2="146" stroke="#2F8F6B" stroke-width="5" stroke-linecap="round"><animate attributeName="x1" values="195.3;149;195.3" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y1" values="119.9;125;119.9" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="x2" values="212;128;212" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="146;148;146" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <line x1="212" y1="146" x2="224.7" y2="148.5" stroke="#2F8F6B" stroke-width="4" stroke-linecap="round"><animate attributeName="x1" values="212;128;212" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y1" values="146;148;146" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="x2" values="224.7;115.9;224.7" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="148.5;152.8;148.5" keyTimes="0.0000;0.5000;1.0000" dur="2.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <circle cx="174" cy="52" r="8.5" fill="#33413A"></circle>
+  <text x="26" y="30" fill="#2F8F6B" font-size="12" text-anchor="start" font-weight="600">扶墙侧立，摆动腿伸直前后摆</text>
+  <text x="26" y="192" fill="#2F8F6B" font-size="12" text-anchor="start" font-weight="600">各 10-15 次，幅度由小到大，膝盖不弯</text>
+</svg>

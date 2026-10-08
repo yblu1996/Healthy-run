@@ -1,0 +1,62 @@
+
+========== 档位 low ==========
+vision_1 → {"temperature":0,"reasoning_effort":"low"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"low"}
+保存草稿 → 200 {"result":"success","hash":"272c20ea58993326fda8c1794d4c70d243a69ed9134f9fd2ead81f10f61fba46","updated_at":1790170505}
+
+发布 → 200 {"result":"success","created_at":1790170505}
+
+----- [low] 0.0s 发起 streaming，图 10 张，goal=full_marathon
+[5.6s] ▶ 开始
+[5.6s] ■ 开始 elapsed=0.0s 输出6490B
+[5.7s] ▶ 识图
+[17.5s] ■ 识图 elapsed=11.8s 输出1360B
+[17.8s] ▶ 诊断计划
+[76.9s] ■ 诊断计划 elapsed=59.4s 输出6908B
+[76.9s] ▶ 结束
+[77.0s] ■ 结束 elapsed=0.0s 输出7457B
+[77.0s] ⛳ 结束 status=succeeded 总耗时=71.329861s
+[落盘] .ab-low.json（总耗时 71.329861s）
+
+========== 档位 high ==========
+vision_1 → {"temperature":0,"reasoning_effort":"high"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"high"}
+保存草稿 → 200 {"result":"success","hash":"9fb3e32d27833daabb7ec3d640f0392f00c0180575ddc549f148d366abf582eb","updated_at":1790170583}
+
+发布 → 200 {"result":"success","created_at":1790170583}
+
+----- [high] 0.0s 发起 streaming，图 10 张，goal=full_marathon
+[3.8s] ▶ 开始
+[3.8s] ■ 开始 elapsed=0.0s 输出6490B
+[3.8s] ▶ 识图
+[28.5s] ■ 识图 elapsed=24.7s 输出2910B
+[28.5s] ▶ 诊断计划
+[152.0s] ■ 诊断计划 elapsed=123.4s 输出11778B
+[152.0s] ▶ 结束
+[152.0s] ■ 结束 elapsed=0.0s 输出13872B
+[152.0s] ⛳ 结束 status=succeeded 总耗时=148.224178s
+[落盘] .ab-high.json（总耗时 148.224178s）
+
+========== 档位 max ==========
+vision_1 → {"temperature":0,"reasoning_effort":"max"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"max"}
+保存草稿 → 200 {"result":"success","hash":"984c8ab72357afcdbcfdd0f78394d6928c0b3ee1e7054948a5b8182363db5115","updated_at":1790170737}
+
+发布 → 200 {"result":"success","created_at":1790170737}
+
+----- [max] 0.0s 发起 streaming，图 10 张，goal=full_marathon
+[5.7s] ▶ 开始
+[5.7s] ■ 开始 elapsed=0.0s 输出6490B
+[5.8s] ▶ 识图
+[107.1s] ■ 识图 elapsed=101.3s 输出15274B
+[107.1s] ▶ 诊断计划
+[405.1s] ■ 诊断计划 elapsed=297.9s 输出28303B
+[405.5s] ▶ 结束
+[405.5s] ■ 结束 elapsed=0.0s 输出42756B
+[405.5s] ⛳ 结束 status=succeeded 总耗时=399.77985s
+[落盘] .ab-max.json（总耗时 399.77985s）
+
+========== 汇总 ==========
+low   总计 71.329861s | 开始=0.000367s/6490B  识图=11.795145s/1360B  诊断计划=59.409271s/6908B  结束=0.000065s/7457B
+high  总计 148.224178s | 开始=0.000375s/6490B  识图=24.651469s/2910B  诊断计划=123.35415s/11778B  结束=0.000066s/13872B
+max   总计 399.77985s | 开始=0.000431s/6490B  识图=101.295032s/15274B  诊断计划=297.943762s/28303B  结束=0.000072s/42756B

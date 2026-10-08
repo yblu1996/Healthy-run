@@ -1,0 +1,6 @@
+COZE_WORKFLOW_ID=7686037587228016667
+COZE_PAT set=true
+COZE_BASE_URL=https://api.coze.cn
+OUTPUT keys: diagnosis_result,recognition
+RECOGNITION (full): {"app_name":null,"form_observations":[],"image_error":"未提供图片","image_type":"unclear","metrics":{"avg_heart_rate":null,"avg_pace_min_per_km":null,"cadence_spm":null,"distance_km":null,"duration_min":null,"elevation_gain_m":null,"max_heart_rate":null,"weekly_volume_km":null}}
+DIAGNOSIS snippet: "用户上传图片无法识别，所有跑步指标（配速、心率、距离、周跑量等）均为空，未提供个人跑步基础、训练目标、损伤史等必要描述信息"

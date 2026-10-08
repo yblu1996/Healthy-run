@@ -1,0 +1,16 @@
+HTTP 200
+TOP KEYS: execute_id,detail,code,msg,data,debug_url,usage
+code=0 msg=
+--- STRUCTURE ---
+execute_id (string)
+detail (object)
+detail.logid (string)
+code (number)
+msg (string)
+data (string)
+debug_url (string)
+usage (object)
+usage.token_count (number)
+usage.output_count (number)
+usage.input_count (number)
+FULL JSON written to .dbg_full.json, size=1515

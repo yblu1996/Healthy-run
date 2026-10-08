@@ -1,0 +1,30 @@
+﻿
+
+ProcessId    : 16320
+CommandLine  : "C:\Program Files\nodejs\\node.exe"  "C:\Program Files\nodejs\\n
+               ode_modules\npm\bin\npm-cli.js" start
+CreationDate : 2026/9/22 13:08:11
+
+ProcessId    : 16056
+CommandLine  : node  server.js
+CreationDate : 2026/9/22 13:08:11
+
+ProcessId    : 27860
+CommandLine  : C:\Users\Lenovo\.workbuddy\binaries\node\versions\22.22.2-3\node
+               .EXE C:\Users\Lenovo\.workbuddy\plugins\cache\workbuddy-builtin\
+               sheetagent\5.5.6-wb.38337834.g5f969292.h4918b5ced607/mcp/start.m
+               js
+CreationDate : 2026/9/22 17:10:06
+
+ProcessId    : 1604
+CommandLine  : "C:\Users\Lenovo\.workbuddy\binaries\node\versions\22.22.2-3\nod
+               e.exe"  C:\Users\Lenovo\.workbuddy\plugins\cache\workbuddy-built
+               in\weixinpay\1.6.109/dist/mcp-server.mjs
+CreationDate : 2026/9/22 17:10:06
+
+ProcessId    : 24660
+CommandLine  : "C:\Program Files\nodejs\node.exe" api/index.js
+CreationDate : 2026/9/22 19:59:27
+
+
+

@@ -1,0 +1,499 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>跑悟 · AI 跑步诊断</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F6E56'/%3E%3Ctext x='32' y='44' font-size='30' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='600'%3E%E8%B7%91%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav id="topnav" class="topnav">
+  <div class="nav-brand">
+    <div class="logo">跑</div>
+    <span class="brand-name">跑悟</span>
+    <span class="brand-sub">AI 跑步诊断</span>
+  </div>
+  <div class="nav-links">
+    <a href="#" data-nav="home">首页</a>
+    <a href="#" data-nav="diagnose">数据诊断</a>
+    <a href="#" data-nav="history">历史记录</a>
+    <a href="#" data-nav="learn">学习园地</a>
+  </div>
+  <button id="btnFollow" class="btn-follow" title="关注公众号与视频号">📣 关注</button>
+  <div class="nav-user">
+    <span id="userBadge" class="user-badge"></span>
+    <span id="quotaBadge" class="quota"></span>
+    <button id="btnFeedback" class="btn-ghost btn-sm" title="意见反馈">💬 反馈</button>
+    <button id="btnLogout" class="btn-ghost">退出</button>
+  </div>
+</nav>
+
+<!-- 移动端底部主导航：桌面隐藏，≤720px 显示（顶栏的 nav-links 同时隐藏） -->
+<nav id="bottomnav" class="bottomnav hidden" aria-label="主导航">
+  <a href="#" data-nav="home"><span class="bn-icon">🏠</span>首页</a>
+  <a href="#" data-nav="diagnose"><span class="bn-icon">📸</span>诊断</a>
+  <a href="#" data-nav="history"><span class="bn-icon">📋</span>记录</a>
+  <a href="#" data-nav="learn"><span class="bn-icon">📚</span>学习</a>
+</nav>
+
+<section id="view-auth" class="view active">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="logo logo-lg">跑</div>
+      <h1>跑悟</h1>
+      <p>AI 跑步诊断 · 跑得对比跑得多更重要</p>
+    </div>
+    <div class="auth-tabs">
+      <button id="tabLogin" class="auth-tab active">登录</button>
+      <button id="tabRegister" class="auth-tab">注册</button>
+    </div>
+    <form id="authForm" class="auth-form">
+      <label>手机号<input id="phone" type="tel" inputmode="tel" placeholder="请输入手机号" required></label>
+      <label id="passwordLabel">密码<input id="password" type="password" placeholder="请输入密码" required>
+        <span id="pwWeakHint" class="field-hint pw-weak hidden">密码强度较弱（纯数字或不足 8 位）容易被猜到，建议改成字母 + 数字组合</span>
+      </label>
+      <label id="passwordConfirmWrap" class="hidden">确认密码<input id="passwordConfirm" type="password" placeholder="请再次输入密码"></label>
+      <label id="nicknameWrap" class="hidden">昵称（选填）<input id="nickname" type="text" placeholder="怎么称呼你"></label>
+      <label id="secqWrap" class="hidden">密保问题
+        <select id="secQuestion">
+          <option value="">请选择一个密保问题</option>
+          <option>您最常跑步的地点是哪里</option>
+          <option>您第一双跑鞋的品牌是什么</option>
+          <option>您小时候最好的朋友叫什么名字</option>
+          <option>您最喜欢的一本书或一部电影叫什么</option>
+          <option>您的出生地是哪座城市</option>
+        </select>
+      </label>
+      <label id="secaWrap" class="hidden">密保答案<input id="secAnswer" type="text" maxlength="40" autocomplete="off" placeholder="至少 2 个字"><span class="field-hint">密保答案用于日后自助找回密码，请务必牢记</span></label>
+      <label id="resetQuestionWrap" class="hidden">您的密保问题<span id="resetQuestionText" class="reset-question">请先填写手机号</span></label>
+      <!-- 三项独立同意（PIPL 要求出境/年龄不得与协议捆绑勾选）：注册时逐项勾选，后端强校验并留痕 -->
+      <div id="agreeWrap" class="agree-col hidden">
+        <label class="agree-row">
+          <input type="checkbox" id="agreeTerms">
+          <span>我已阅读并同意《<a href="legal/terms.html" target="_blank" rel="noopener">用户服务协议</a>》与《<a href="legal/privacy.html" target="_blank" rel="noopener">隐私政策</a>》</span>
+        </label>
+        <label class="agree-row">
+          <input type="checkbox" id="agreeCrossBorder">
+          <span>我<b>单独同意</b>将我的个人信息（含健康数据与跑步图片）传输至境外云服务商存储和处理（正式上线前将迁回境内服务器）</span>
+        </label>
+        <label class="agree-row">
+          <input type="checkbox" id="agreeAge">
+          <span>我确认本人已<b>年满 14 周岁</b>；14-18 周岁请在监护人知情同意后使用</span>
+        </label>
+      </div>
+      <button type="submit" class="btn-primary" id="authSubmit">登录</button>
+      <button type="button" class="auth-link" id="forgotLink">忘记密码？</button>
+    </form>
+    <p class="auth-tip">注册即送 3 次免费 AI 诊断 · 密保答案用于找回密码，请牢记</p>
+  </div>
+</section>
+
+<section id="view-home" class="view">
+  <div class="page">
+    <div class="hero">
+      <h2>跑得对，比跑得多更重要</h2>
+      <p class="hero-sub"><span class="hero-line">上传跑步数据与跑姿图片，</span><span class="hero-line">AI 识别问题并生成 8 周训练方案</span></p>
+      <button class="btn-primary btn-lg" data-nav="diagnose">开始诊断</button>
+      <span class="hero-tip">注册即送 3 次免费诊断 · 无需付费</span>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <p class="feature-tag">01 · 数据诊断</p>
+        <h3>看懂你的跑步数据</h3>
+        <p>上传截图与跑姿照片，识别配速、心率、步频与姿态，结合你的描述定位问题。</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-tag">02 · 8 周计划</p>
+        <h3>每周照着做就行</h3>
+        <p>基于诊断生成个性化跑量与强度安排，每周打卡，再次上传即可对比更新。</p>
+      </div>
+      <div class="feature-card">
+        <p class="feature-tag">03 · 目标挑战</p>
+        <h3>冲刺半马与全马</h3>
+        <p>选定目标与比赛日期，结合现有数据生成科学、稳健的周期化备战方案。</p>
+      </div>
+      <!-- 04 与前三张卡同网格对齐，点击进入学习园地 -->
+      <div class="feature-card feature-learn" data-nav="learn" role="button" tabindex="0" aria-label="进入科学跑步学习园地">
+        <p class="feature-tag">04 · 科学跑步</p>
+        <h3>练对比练多更重要</h3>
+        <p>正确跑姿、科学跑量、热身恢复、伤痛预防、备赛策略，点击查阅学习园地。</p>
+      </div>
+    </div>
+
+    <h3 class="section-title">我的档案</h3>
+    <div id="statGrid" class="stat-grid"></div>
+    <div id="planBar" class="plan-bar hidden">
+      <div class="plan-bar-head">
+        <span id="planFocus"></span>
+      </div>
+      <div class="plan-dots" id="planDots"></div>
+      <div class="plan-bar-track" id="planTrack">
+        <div id="planFill" class="plan-bar-fill"></div>
+      </div>
+      <p class="plan-bar-tip">点击上方周数或滑动轨道，查看每周安排</p>
+      <div id="planWeekDetail" class="plan-week-detail"></div>
+    </div>
+
+    <!-- 密保问题：老账号（密保字段上线前注册）可在此补设；忘答的也可更换 -->
+    <h3 class="section-title">密保问题</h3>
+    <p class="section-desc">密保答案用于日后自助找回密码，未设置的账号无法自助重置密码。</p>
+    <div class="acct-card">
+      <div class="acct-row">
+        <div class="acct-text">
+          <strong id="secqStatusText">检查中…</strong>
+          <span id="secqStatusHint"></span>
+        </div>
+      </div>
+      <div class="acct-row">
+        <div class="acct-text">
+          <label class="secq-field">密保问题
+            <select id="acctSecQuestion">
+              <option value="">请选择一个密保问题</option>
+              <option>您最常跑步的地点是哪里</option>
+              <option>您第一双跑鞋的品牌是什么</option>
+              <option>您小时候最好的朋友叫什么名字</option>
+              <option>您最喜欢的一本书或一部电影叫什么</option>
+              <option>您的出生地是哪座城市</option>
+            </select>
+          </label>
+          <label class="secq-field">密保答案
+            <input id="acctSecAnswer" type="text" maxlength="40" autocomplete="off" placeholder="至少 2 个字，请务必牢记">
+          </label>
+          <label class="secq-field">当前密码（确认是本人操作）
+            <input id="acctSecPassword" type="password" autocomplete="current-password" placeholder="输入现在的登录密码">
+          </label>
+        </div>
+        <button class="btn-ghost" id="btnSaveSecq">保存密保</button>
+      </div>
+    </div>
+
+    <!-- 修改密码：弱密码提醒（纯数字/过短）的承接入口，也可日常主动更换 -->
+    <h3 class="section-title">修改密码</h3>
+    <p class="section-desc">密码建议 8 位以上并混合字母与数字，纯数字密码容易被猜到。</p>
+    <div class="acct-card">
+      <div class="acct-row">
+        <div class="acct-text">
+          <label class="secq-field">当前密码
+            <input id="chpwCurrent" type="password" autocomplete="current-password" placeholder="输入现在的登录密码">
+          </label>
+          <label class="secq-field">新密码
+            <input id="chpwNew" type="password" autocomplete="new-password" placeholder="至少 6 位，建议字母 + 数字">
+          </label>
+          <label class="secq-field">确认新密码
+            <input id="chpwConfirm" type="password" autocomplete="new-password" placeholder="再输入一次新密码">
+          </label>
+        </div>
+        <button class="btn-ghost" id="btnChangePassword">修改密码</button>
+      </div>
+    </div>
+
+    <!-- 账号与数据：导出（可携带权）与注销（删除权）。按法律要求做成自助入口，不能只写"联系客服" -->
+    <h3 class="section-title">账号与数据</h3>
+    <p class="section-desc">你的诊断记录随时可以带走，也可以随时连同账号一起删除。</p>
+    <div class="acct-card">
+      <div class="acct-row">
+        <div class="acct-text">
+          <strong>导出我的数据</strong>
+          <span>把账号信息、全部诊断记录与训练计划打包成一份文件下载到本地</span>
+        </div>
+        <button class="btn-ghost" id="btnExportData">导出</button>
+      </div>
+      <div class="acct-row">
+        <div class="acct-text">
+          <strong>注销账号</strong>
+          <span>永久删除账号、诊断记录与上传的图片，此操作不可恢复</span>
+        </div>
+        <button class="btn-danger-ghost" id="btnDeleteAccount">注销</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="view-diagnose" class="view">
+  <div class="page">
+    <h2 class="section-title">数据诊断</h2>
+    <p class="section-desc">上传跑步 App 截图（配速/心率/跑量）或跑姿照片，再用两句话说说你的问题或目标。</p>
+
+    <!-- 两步向导：① 上传图片 ② 补充信息并提交 -->
+    <div class="wiz-steps" aria-hidden="true">
+      <span class="wiz-step active" id="wizStep1"><i>1</i>上传图片</span>
+      <span class="wiz-arrow"></span>
+      <span class="wiz-step" id="wizStep2"><i>2</i>补充信息并提交</span>
+    </div>
+
+    <form id="diagnoseForm" class="diagnose-form">
+      <div id="wizPage1" class="hidden">
+        <div class="metric-block">
+          <p class="metric-head">补充你确定的数据 <span class="metric-required">年龄必填</span></p>
+          <p class="metric-tip">除年龄外，不知道的项目可以留空；不要猜测图片上看不清的数值。</p>
+          <div class="metric-grid">
+            <label><span class="field-label">性别（选填）</span>
+              <select id="mGender"><option value="">请选择</option><option>男</option><option>女</option></select>
+            </label>
+            <label><span class="field-label">年龄（岁）<span class="req-star">*</span></span><input id="mAge" type="number" min="14" max="100" inputmode="numeric" placeholder="如 45"></label>
+            <label><span class="field-label">身高（cm，选填）</span><input id="mHeight" type="number" min="100" max="250" step="any" inputmode="decimal" placeholder="如 170"></label>
+            <label><span class="field-label">体重（kg，选填）</span><input id="mWeight" type="number" min="20" max="300" step="any" inputmode="decimal" placeholder="如 68"></label>
+            <label><span class="field-label">跑龄（选填）</span>
+              <select id="mRunYears"><option value="">请选择</option><option>不到 1 年</option><option>1-3 年</option><option>3-5 年</option><option>5 年以上</option></select>
+            </label>
+            <label><span class="field-label">最近 7 天累计跑量（km，选填）</span><input id="mWeeklyVolume" type="number" min="0" max="500" step="any" inputmode="decimal" placeholder="近一周总和，如 42"></label>
+            <label><span class="field-label">典型跑步配速（选填）</span><input id="mPace" type="text" inputmode="numeric" placeholder="如 6'30&quot;" autocomplete="off"><span class="field-hint">直接输数字：630 = 6'30&quot;/km，603 = 6'03&quot;/km</span></label>
+            <label><span class="field-label">典型跑步平均心率（bpm，选填）</span><input id="mHr" type="number" min="40" max="220" inputmode="numeric" placeholder="如 145"></label>
+            <label>步频（spm，选填）<input id="mCadence" type="number" min="50" max="300" inputmode="numeric" placeholder="如 170"></label>
+          </div>
+          <p class="metric-note">口径说明：跑量填<u>最近 7 天累计</u>（不是单次、不是月跑量）；配速/心率/步频填<u>最近一次典型日常跑步</u>的数据（代表你当前水平，不是间歇跑或测试跑）。</p>
+        </div>
+        <label>你的目标
+          <select id="goal">
+            <option value="none">只想健康跑</option>
+            <option value="health">提升健康/减脂</option>
+            <option value="half_marathon">半程马拉松</option>
+            <option value="full_marathon">全程马拉松</option>
+          </select>
+        </label>
+        <label id="raceDateWrap" class="hidden">目标比赛日期
+          <span class="race-date-row">
+            <select id="raceYear"></select>
+            <select id="raceMonth"></select>
+            <select id="raceDay"></select>
+          </span>
+        </label>
+        <label>是否出现运动相关胸痛、晕厥，或静息痛、明显肿胀、走路也疼等警示症状？
+          <select id="mSafetyStatus">
+            <option value="unknown">不确定</option>
+            <option value="none">没有上述症状</option>
+            <option value="concerning">有上述症状</option>
+          </select>
+        </label>
+        <div class="wiz-actions">
+          <button type="button" class="btn-ghost" id="btnPrevStep">← 上一步</button>
+          <button type="submit" class="btn-primary btn-lg" id="diagnoseSubmit">开始分析</button>
+        </div>
+      </div>
+
+      <div id="wizPage2">
+        <p class="metric-tip">同一次跑步的分段、曲线和详情可以一起上传；月汇总与单次跑步会分开分析。长截图请保留原图清晰度，最多 10 张。</p>
+        <!-- 健康数据同意必须发生在图片上传之前 -->
+        <label class="agree-row consent-row">
+          <input type="checkbox" id="consentHealth">
+          <span>我已知悉《<a href="legal/disclaimer.html" target="_blank" rel="noopener">免责声明</a>》（本服务只提供运动参考建议，不构成医疗建议），并<strong>单独同意</strong>处理我的健康数据（身高体重、心率、跑量、跑姿图片等）用于生成训练建议</span>
+        </label>
+        <div class="upload-area" id="uploadArea" role="button" tabindex="0" aria-label="选择跑步图片上传">
+          <p class="upload-icon">＋</p>
+          <p>点击或拖拽图片到此处</p>
+          <p class="upload-sub">支持 <em>佳明、华为、Keep、悦跑圈、Strava</em> 等运动截图</p>
+          <p class="upload-sub">同一次跑步的多个页面会合并，最多 <em>10</em> 张 · 单张不超过 <em>2MB</em>（大图自动压缩）</p>
+          <p class="upload-count" id="uploadCount" aria-live="polite"></p>
+          <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/*" multiple hidden>
+        </div>
+        <div id="previewGrid" class="preview-grid"></div>
+
+        <label class="goal-label">
+          <span class="goal-label-text"><span class="goal-required">!</span>描述你的问题或目标<em class="goal-em">(建议填写)</em></span>
+          <span class="goal-label-hint">写清疼痛部位、近期状态或目标比赛，写得越具体，方案越准</span>
+          <textarea id="userText" rows="4" placeholder="例如：右膝外侧跑完会疼，想明年跑一次半马"></textarea>
+        </label>
+
+        <button type="button" class="btn-primary btn-lg" id="btnNextStep">下一步 · 补充跑步信息</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="view-report" class="view">
+  <!-- 红线警示通栏：risk_alert 不为空时显示，只在报告页全宽置顶 -->
+  <div id="riskBanner" class="risk-banner hidden"></div>
+  <div class="page wide">
+    <div class="report-top">
+      <button class="btn-back" data-nav="history">← 返回历史记录</button>
+      <div id="reportActions" class="report-actions hidden">
+        <button class="btn-ghost btn-sm" id="btnExportImage">📷 生成长图</button>
+        <button class="btn-ghost btn-sm" id="btnExportPdf">📄 导出 PDF</button>
+      </div>
+    </div>
+    <div id="reportNav" class="report-nav hidden"></div>
+    <div id="reportBody"></div>
+  </div>
+</section>
+
+<section id="view-history" class="view">
+  <div class="page">
+    <h2 class="section-title">历史记录</h2>
+    <p class="section-desc">每次诊断都写入个人数据库，再次上传新数据时会自动对比历史、更新方案。</p>
+    <div id="historyList" class="history-list"></div>
+    <button id="loadMoreBtn" class="btn-ghost hidden" style="margin:8px auto 0">加载更多</button>
+  </div>
+</section>
+
+<section id="view-learn" class="view">
+  <div class="page">
+    <div class="learn-top">
+      <!-- 目标页与文字由 app.js 的 show() 按"进来之前那一页"动态设置 -->
+      <button class="btn-back" id="learnBack" data-nav="home">← 返回首页</button>
+    </div>
+    <h2 class="section-title">科学跑步学习园地</h2>
+    <p class="section-desc">正确跑姿、科学跑量、伤痛预防、备赛策略。把这些练到位，比盲目堆跑量管用。内容持续更新。</p>
+    <div id="learnBody"></div>
+  </div>
+</section>
+
+<!-- 确认退出后的收尾页：本页是浏览器的第一条记录时，脚本无法关掉浏览器本身，用它明确收尾 -->
+<section id="view-exit" class="view">
+  <div class="page">
+    <div class="exit-card">
+      <div class="logo logo-lg">跑</div>
+      <h2>已退出跑悟</h2>
+      <p>你上传的图片、诊断报告与训练计划都已保存。</p>
+      <p class="exit-hint">关掉本页即可；下次用手机号登录，历史记录里都还在。</p>
+      <button class="btn-primary" id="btnReenter">重新进入</button>
+    </div>
+  </div>
+</section>
+
+<!-- 分析中全屏遮罩，防止用户焦虑狂点或误刷新 -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-card">
+    <p class="loading-title"><span class="agent-name">&nbsp;小悟&nbsp;</span>正在分析您的跑步数据…</p>
+    <p class="loading-sub">通常约 3-5 分钟，报告会自动保存到历史记录，请勿离开本页</p>
+    <ul class="steps" id="loadingSteps">
+      <li data-step><span class="step-dot"></span><span class="step-text">读取上传的图片</span></li>
+      <li data-step><span class="step-dot"></span><span class="step-text">识别跑步数据与跑姿</span></li>
+      <li data-step><span class="step-dot"></span><span class="step-text">分析训练负荷与问题</span></li>
+      <li data-step><span class="step-dot"></span><span class="step-text">生成 8 周训练计划</span></li>
+    </ul>
+    <p class="loading-count" id="loadingCount">已完成 0 / 4 步</p>
+    <!-- 步骤打勾按实测节奏推进（识图 ~20s、诊断计划 high 档 ~150s，排队时可到数分钟），第 4 步始终进行中直到接口真实返回 -->
+    <p class="loading-note">前 3 步按实测节奏推进，第 4 步"生成训练计划"是最慢的一段（约 2-3 分钟），以服务器实际返回为准</p>
+  </div>
+</div>
+
+<!-- 长图预览遮罩：移动端无法直接 download，用全屏预览 + 长按保存 -->
+<div id="shareOverlay" class="share-overlay hidden">
+  <p class="share-hint">长按图片保存到相册，或点击右上角分享</p>
+  <img id="shareImage" alt="AI 跑步报告长图">
+  <button class="btn-ghost" id="shareClose">关闭</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="payModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>次数不足</h3>
+    <p>测试环境模拟充值：不会发起真实支付。正式收费通道尚未接入。</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="payCancel">取消</button>
+      <button class="btn-primary" id="payConfirm">模拟增加 1 次</button>
+    </div>
+  </div>
+</div>
+
+<div id="learnZoomModal" class="modal learn-zoom-modal hidden" role="dialog" aria-modal="true" aria-labelledby="learnZoomTitle">
+  <div class="modal-card learn-zoom-card">
+    <div class="learn-zoom-head">
+      <h3 id="learnZoomTitle"></h3>
+      <button type="button" class="btn-ghost" id="learnZoomClose" aria-label="关闭动作动画预览">关闭</button>
+    </div>
+    <img id="learnZoomImage" alt="">
+    <p>对照姿势和节奏，按右上角关闭或按 Esc 返回。</p>
+  </div>
+</div>
+
+<!-- 意见反馈弹窗：内容存入 feedback 表，管理员在 Supabase 后台查看 -->
+<div id="feedbackModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>意见反馈</h3>
+    <p>使用中遇到问题，或对功能/报告有任何建议，都欢迎告诉我们。</p>
+    <form id="feedbackForm" class="feedback-form">
+      <label>反馈内容（必填，5-500 字）
+        <textarea id="feedbackContent" rows="5" maxlength="500" placeholder="例如：报告里的训练计划看不懂 / 某个按钮点不动 / 希望增加……" required></textarea>
+      </label>
+      <label>联系方式（选填，方便我们回访）
+        <input id="feedbackContact" type="text" maxlength="50" placeholder="手机号 / 邮箱">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="feedbackCancel">取消</button>
+        <button type="submit" class="btn-primary" id="feedbackSubmit">提交反馈</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 关注弹窗：公众号 + 视频号二维码。入口是顶栏 #btnFollow，首页/诊断/历史/学习四页通用 -->
+<div id="followModal" class="modal hidden">
+  <div class="modal-card follow-card">
+    <h3>关注跑悟</h3>
+    <p>长按识别或扫码关注，作者在产业与生活上的更多观察都在这里。</p>
+    <div class="follow-codes">
+      <div class="follow-item">
+        <img src="qrcode-gzh.jpg" alt="公众号二维码">
+        <strong>公众号 · 产业路书</strong>
+        <span>作判断、讲方法、找路径</span>
+      </div>
+      <div class="follow-item">
+        <img src="qrcode-sph-square.jpg" alt="视频号二维码">
+        <strong>视频号 · 路远山高2049</strong>
+        <span>讲产业，也聊人生判断</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="followClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通用确认弹窗：替代原生 confirm()，避免连续调用时被浏览器拦截或变成"关闭网页"对话框 -->
+<div id="confirmModal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="confirmTitle">请确认</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="confirmCancel">取消</button>
+      <button class="btn-danger" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 注销账号：不可逆操作，两道确认（密码 + 手输「注销」）。
+     手输确认词是刻意设计的摩擦——默认按钮或一键确认挡不住"手机被人拿去顺手点掉" -->
+<div id="deleteAccountModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>注销账号</h3>
+    <p class="danger-note">注销会<strong>永久删除</strong>你的账号、全部诊断记录、上传的跑步图片与训练计划，<strong>删除后无法恢复</strong>，剩余诊断次数也一并作废。</p>
+    <p>如果只是不想留某次记录，回到历史记录删除单条即可，不必注销账号。</p>
+    <form id="deleteAccountForm" class="feedback-form">
+      <label>登录密码
+        <input id="delPassword" type="password" placeholder="请输入当前登录密码" autocomplete="current-password" required>
+      </label>
+      <label>请输入「注销」两个字以确认
+        <input id="delConfirmWord" type="text" placeholder="注销" autocomplete="off" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="delAccountCancel">取消</button>
+        <button type="submit" class="btn-danger" id="delAccountSubmit">确认注销</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="site-foot">
+  <p class="site-foot-links">
+    <a href="legal/terms.html">用户服务协议</a><span class="sep">·</span><a href="legal/privacy.html">隐私政策</a><span class="sep">·</span><a href="legal/disclaimer.html">免责声明</a>
+  </p>
+  <p>© 2026 路玉宝 保留所有权利 ｜ 跑悟 · AI 跑步诊断</p>
+  <p>联系微信：yblu1996</p>
+  <!-- 上线前补两行（备案完成后把占位换成真号，链接必须指向官方站点）：
+  <p><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">京ICP备XXXXXXXX号-X</a></p>
+  <p><a href="https://beian.mps.gov.cn/#/query/webSearch" target="_blank" rel="noopener">京公网安备XXXXXXXX号</a></p>
+       ① ICP 备案：工信部，beian.miit.gov.cn
+       ② 公安网备：网站开通后 30 日内须在「全国互联网安全管理服务平台」完成，多数地区要求页脚展示备案号
+       注：备案主体须与本页运营者一致（现为个人：路玉宝）。个人备案不得从事经营性活动，
+           正式收取 9.9 元/次之前须转为企业主体备案。
+  -->
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+user: {"id":"fbda77bb-4eca-405e-adb0-cd25ada55ecc","phone":"18853339895","nickname":"一缕春风","quota":94}
+== records by created_at asc ==
+2026-09-17T14:59:32.775054+00:00 | v7 | done | goal=half_marathon | type=half_marathon | 49岁男性跑者，跑龄1-3年，因近2个月出差跑量下降
+2026-09-18T01:00:14.409825+00:00 | v2 | failed | goal=full_marathon | type=null | 
+2026-09-18T01:08:45.915427+00:00 | v3 | done | goal=full_marathon | type=full_marathon | 49岁男性跑者，跑龄1-3年，因短期出差停训后复跑有
+2026-09-18T01:13:50.5611+00:00 | v4 | done | goal=full_marathon | type=full_marathon | 49岁男性跑者，跑龄1-3年，短期停训后有氧能力暂时

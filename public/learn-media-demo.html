@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习园地矢量图升级对比 Demo</title>
+<style>
+  body{margin:0;min-height:100vh;background:#20262B;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#E8EDF0;display:flex;flex-direction:column;align-items:center;padding:32px 16px;box-sizing:border-box}
+  h1{font-size:20px;font-weight:700;margin:0 0 6px}
+  p.sub{margin:0 0 28px;font-size:13px;color:#9AA7AE}
+  .row{display:flex;flex-wrap:wrap;gap:28px;justify-content:center;max-width:900px}
+  .card{background:#F6F8F9;border-radius:16px;padding:18px 18px 12px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
+  .card h2{margin:0 0 4px;font-size:13px;color:#5B6B62;text-align:center}
+  .card img{display:block;width:340px;max-width:88vw;height:auto;border-radius:10px}
+  .card .tag{display:inline-block;margin-top:10px;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700}
+  .old .tag{background:#E7E2D8;color:#8A8474}
+  .new .tag{background:#DFF2E8;color:#2F8F6B}
+  .note{margin-top:28px;max-width:720px;font-size:12.5px;line-height:1.9;color:#9AA7AE;background:#28303A;border-radius:12px;padding:16px 20px}
+  .note b{color:#C9D6DC}
+</style>
+</head>
+<body>
+  <h1>学习园地矢量图升级对比（以"深蹲"为例）</h1>
+  <p class="sub">两张图的动作演示、教学标注完全相同，仅视觉层升级</p>
+  <div class="row">
+    <div class="card old">
+      <h2>现有版本</h2>
+      <img src="learn-media/originals/14-squat.svg" alt="原版深蹲矢量图">
+      <span class="tag">火柴人 · 白底</span>
+    </div>
+    <div class="card new">
+      <h2>升级版本</h2>
+      <img src="learn-media/14-squat-v2.svg" alt="升级版深蹲矢量图">
+      <span class="tag">暖色场景 · 光影 · 玻璃卡片</span>
+    </div>
+  </div>
+  <div class="note">
+    <b>升级版做了什么：</b>暖色渐变场景 + 柔光光斑、加粗渐变肢体（胶囊形）+ 头部黏土质感高光、
+    远近肢体双色制造纵深、随下蹲呼吸缩放的地面影子、悬浮粒子、磨砂玻璃要点卡片（上下轻浮动）。
+    <b>保留了：</b>深蹲动作演示动画、"膝对脚尖"教学标注、组数建议 —— 教学功能不受影响。<br>
+    <b>说明：</b>参考图是 3D 建模渲染的黏土风格，纯 SVG 无法 100% 复刻其材质；此方案是在保持
+    SVG 轻量（几十 KB、无需外部资源）前提下能达到的最接近风格。若满意，可按此风格升级全部 18 张图。
+  </div>
+</body>
+</html>

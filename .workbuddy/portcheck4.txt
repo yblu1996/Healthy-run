@@ -1,0 +1,20 @@
+﻿=== Scheduled Tasks (pm2) ===
+
+
+TaskName : PM2 Resurrect OpenClaw
+State    : Ready
+TaskPath : \
+
+
+
+=== Startup folder ===
+
+Name           
+----           
+boot-hidden.vbs
+desktop.ini    
+
+
+=== Run key ===
+=== ecosystem files ===
+=== DONE ===

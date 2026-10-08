@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 210" width="320" height="210" role="img" aria-label="躯干前倾来自脚踝（对比）">
+<title>躯干前倾来自脚踝（对比）</title>
+<style>text{font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;}</style>
+<rect x="0" y="0" width="320" height="210" rx="12" fill="#F8FBF9"/>
+
+  <line x1="24" y1="174" x2="296" y2="174" stroke="#D5E0DA" stroke-width="3" stroke-linecap="round"/>
+  <line x1="160" y1="36" x2="160" y2="196" stroke="#AFC5BA" stroke-width="2" stroke-dasharray="4 5"/>
+  <text x="80" y="28" fill="#D0533F" font-size="13" text-anchor="middle" font-weight="600">✕ 弯腰驼背</text>
+  <text x="240" y="28" fill="#2F8F6B" font-size="13" text-anchor="middle" font-weight="600">✓ 从脚踝前倾</text>
+  <line x1="118" y1="78" x2="85" y2="103" stroke="#D0533F" stroke-width="6" stroke-linecap="round"></line>
+  <line x1="115" y1="84" x2="115" y2="105" stroke="#D0533F" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="115" y1="105" x2="96" y2="114" stroke="#D0533F" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="85" y1="103" x2="99.7" y2="130.3" stroke="#D0533F" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="99.7" y1="130.3" x2="88" y2="159" stroke="#D0533F" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="88" y1="159" x2="100.5" y2="162.4" stroke="#D0533F" stroke-width="4" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="115" y1="84" x2="95.6" y2="92" stroke="#D0533F" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="95.6" y1="92" x2="102" y2="112" stroke="#D0533F" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="85" y1="103" x2="98.3" y2="131" stroke="#D0533F" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="98.3" y1="131" x2="85" y2="159" stroke="#D0533F" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="85" y1="159" x2="97.5" y2="162.4" stroke="#D0533F" stroke-width="4" stroke-linecap="round"></line>
+  <circle cx="125" cy="66" r="8.5" fill="#D0533F"></circle>
+  <g><animateTransform attributeName="transform" type="rotate" values="0 238 159; -9 238 159; 0 238 159" dur="3.2s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"/><line x1="238" y1="60" x2="238" y2="98" stroke="#33413A" stroke-width="6" stroke-linecap="round"></line>
+  <line x1="238" y1="64" x2="246.1" y2="83.4" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="246.1" y1="83.4" x2="242" y2="104" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="238" y1="98" x2="244.5" y2="128.3" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="244.5" y1="128.3" x2="240" y2="159" stroke="#33413A" stroke-width="4.5" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="240" y1="159" x2="252.5" y2="162.4" stroke="#33413A" stroke-width="4" stroke-linecap="round" opacity="0.38"></line>
+  <line x1="238" y1="64" x2="230.7" y2="83.7" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="230.7" y1="83.7" x2="236" y2="104" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="238" y1="98" x2="243.5" y2="128.5" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="243.5" y1="128.5" x2="238" y2="159" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="238" y1="159" x2="250.5" y2="162.4" stroke="#33413A" stroke-width="4" stroke-linecap="round"></line>
+  <circle cx="238" cy="50" r="8.5" fill="#33413A"></circle></g>
+  <line x1="238" y1="100" x2="238" y2="48" stroke="#2F8F6B" stroke-width="2" stroke-dasharray="4 5"/>
+  <path d="M 238,54 A 101 101 0 0 1 253.7,55.2" fill="none" stroke="#2F8F6B" stroke-width="2"/>
+  <text x="258" y="66" fill="#2F8F6B" font-size="13" text-anchor="start" font-weight="600">5-10°</text>
+  <text x="26" y="198" fill="#7E8C85" font-size="12" text-anchor="start" font-weight="600">前倾从脚踝开始，脊柱从头到脚保持一条直线</text>
+</svg>

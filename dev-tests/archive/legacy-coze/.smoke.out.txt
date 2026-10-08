@@ -1,0 +1,7 @@
+confirmModal in page: YES
+btn-danger in page: YES
+health: {"ok":true}
+DELETE no-auth status: 401 (401 = 路由存在且正确拒绝)
+register with invite: 200
+DELETE nonexistent with token: 404 (404 = 正常)
+test account cleaned

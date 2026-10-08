@@ -1,0 +1,9 @@
+﻿=== curl https://as-naming.cpolar.top ===
+FAIL: 远程服务器返回错误: (502) 错误的网关。
+=== curl https://healthy-run.cpolar.top (control) ===
+STATUS 200 BODY {"ok":true}
+=== cpolar local dashboard ===
+port 9200 => 200
+port 2017 => no dashboard
+port 4040 => 200
+=== DONE ===

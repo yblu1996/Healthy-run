@@ -1,0 +1,16 @@
+data (object)
+data.workflow_detail (object)
+data.workflow_detail.workflow_id (string) = "7686037587228016667"
+data.workflow_detail.workflow_name (string) = "health_workflow"
+data.workflow_detail.description (string) = "建 4 节点工作流，两段 prompt 直接从《扣子工作流设计方案.md》复制 → 自测 → 发布 → 拿 Workfl"
+data.workflow_detail.icon_url (string) = "https://lf9-appstore-sign.oceancloudapi.com/ocean-cloud-tos/"
+data.workflow_detail.app_id (string) = "0"
+data.workflow_detail.creator (object)
+data.workflow_detail.creator.id (string) = "3242917769773120"
+data.workflow_detail.creator.name (string) = "用户523367920"
+data.workflow_detail.created_at (number)
+data.workflow_detail.updated_at (number)
+code (number)
+msg (string) = ""
+detail (object)
+detail.logid (string) = "20260918132501E6F850BCE0A32C94FA4B"

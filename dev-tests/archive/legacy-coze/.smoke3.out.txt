@@ -1,0 +1,5 @@
+registered uid=f3d741ef
+GET /api/records: 200 total=2
+  2026-09-18T01:36:14.583+00:00 | v2 | done | full_marathon | 新记录-全马
+  2026-09-17T23:36:14.581+00:00 | v1 | done | half_marathon | 旧记录-半马
+SORT OK: newest first

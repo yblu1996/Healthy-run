@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200" role="img" aria-label="髋部绕环（单腿站立，膝盖抬平后向外画圆，正视）">
+<title>髋部绕环（单腿站立，膝盖抬平后向外画圆，正视）</title>
+<style>text{font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;}</style>
+<rect x="0" y="0" width="320" height="200" rx="12" fill="#F8FBF9"/>
+
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F8F6B"/></marker></defs>
+  <line x1="24" y1="170" x2="296" y2="170" stroke="#D5E0DA" stroke-width="3" stroke-linecap="round"/>
+  <!-- 膝盖画圆轨迹：绕自由侧髋关节的虚线椭圆，箭头指示环绕方向 -->
+  <ellipse cx="166" cy="104" rx="26" ry="15" fill="none" stroke="#2F8F6B" stroke-width="2" stroke-dasharray="4 4"/>
+  <path d="M 191.3,98.2 A 26 15 0 0 1 191.6,109.4" fill="none" stroke="#2F8F6B" stroke-width="2.5" marker-end="url(#ah)"/>
+  <!-- 头 -->
+  <circle cx="150" cy="42" r="8.5" fill="#33413A"></circle>
+  <!-- 颈至肩 -->
+  <line x1="150" y1="54" x2="130" y2="66" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="150" y1="54" x2="170" y2="66" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <!-- 双手叉腰：肩直接落到同侧髋 -->
+  <line x1="130" y1="66" x2="140" y2="98" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="170" y1="66" x2="160" y2="98" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <!-- 骨盆线：支撑髋(左) 与 活动髋(右) -->
+  <line x1="138" y1="100" x2="164" y2="100" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <!-- 支撑腿：微屈站立 -->
+  <line x1="138" y1="100" x2="132" y2="134" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="132" y1="134" x2="130" y2="164" stroke="#33413A" stroke-width="5" stroke-linecap="round"></line>
+  <line x1="122" y1="166" x2="138" y2="166" stroke="#33413A" stroke-width="4" stroke-linecap="round"></line>
+  <!-- 活动腿大腿：髋固定，膝盖沿"落地→抬平→向外打开"循环 -->
+  <line x1="164" y1="100" x2="164" y2="118" stroke="#33413A" stroke-width="5" stroke-linecap="round"><animate attributeName="x2" values="164;146;190;190;146;164" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="118;96;100;100;96;118" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <!-- 小腿：随膝盖自然下垂 -->
+  <line x1="164" y1="118" x2="166" y2="148" stroke="#33413A" stroke-width="4.5" stroke-linecap="round"><animate attributeName="x1" values="164;146;190;190;146;164" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y1" values="118;96;100;100;96;118" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="x2" values="166;148;192;192;148;166" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="148;126;130;130;126;148" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <!-- 活动侧脚 -->
+  <line x1="158" y1="150" x2="174" y2="150" stroke="#33413A" stroke-width="4" stroke-linecap="round"><animate attributeName="x1" values="158;140;184;184;140;158" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y1" values="150;128;132;132;128;150" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="x2" values="174;156;200;200;156;174" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/><animate attributeName="y2" values="150;128;132;132;128;150" keyTimes="0.0000;0.2200;0.4800;0.7200;0.8800;1.0000" dur="3.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1;0.42 0 0.58 1"/></line>
+  <text x="26" y="26" fill="#2F8F6B" font-size="12" text-anchor="start" font-weight="600">单腿站立，膝盖抬至水平再向外打开</text>
+  <text x="26" y="192" fill="#2F8F6B" font-size="12" text-anchor="start" font-weight="600">打开后停 2 秒再收回 · 每组 4-12 次，每侧 4 组</text>
+</svg>

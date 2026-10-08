@@ -1,0 +1,5 @@
+删除前: v1,v2,v3
+DELETE status: 200
+删除后: v1(测试记录2),v2(测试记录3)
+PASS: 剩余记录已从 1 连续重编号
+test account cleaned

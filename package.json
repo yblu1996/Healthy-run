@@ -1,0 +1,24 @@
+{
+  "name": "run-diagnostic-platform",
+  "version": "1.1.0",
+  "private": true,
+  "description": "健康跑 AI 诊断与训练规划平台",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "node api/index.js",
+    "start": "node api/index.js",
+    "test": "node dev-tests/diagnostic-contract.test.js && node dev-tests/model-json.test.js && node dev-tests/metrics-form-test.js && node dev-tests/dify-unit-test.js",
+    "secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.4.0"
+  }
+}

@@ -1,0 +1,167 @@
+# 项目长期笔记 · 健康跑 AI 平台
+
+## 定位
+面向健康跑步人群的网页端 AI 诊断与训练规划平台，解决跑步姿势、跑量不科学问题。四大功能：上传数据（图片+文字）AI 分析、按次收费（9.9 元/次）生成 8 周方案、个性化目标（半马/全马）备战方案、清新美观的网页界面。用户数据沉淀为个人专属数据库，再次登录可对比历史更新方案。
+
+## 技术选型（已定）
+- 架构：扣子当 AI 大脑（Workflow，可被后端 API 调用）+ 轻量自建壳（前端+后端+数据库）。
+- 验证期：coze.com + Claude/GPT 多模态 + Supabase（数据库/存储/登录）+ Vercel，成本约零，支付暂不接（用邀请码免费换数据）。
+- 未来国内化：国内云 + 备案 + 微信支付，模型走国内可商用大模型或合规通道，prompt 可平移。
+- 扣子工作流 4 节点：开始 → 识图(多模态,温度0) → 诊断+计划(温度0.3) → 输出。知识库暂不拆，训练学规则写进系统提示词。
+
+## 关键约定
+- 红线：疑似损伤信号必须先提示就医、本周以休息为主，模型不下医疗诊断。
+- 每条诊断必须标注依据；信息不足写"数据不足"，不准编造数据。
+- 训练规则：周跑量递增 ≤10%、80/20 强度分布、每周 ≥1 天全休、力量训练每周 2 次。
+- run_records 表带版本号，第 N 次诊断把历史档案喂给模型做纵向对比（progress 字段）。
+- 验收标准：识图准确率 >90%、红线用例 100% 触发就医提醒。
+
+## 产出物
+- 《扣子工作流设计方案.md》（项目根目录，含可直接复制的两段 prompt 与验收用例）
+- 已实现完整代码工程：api/（Express 后端）、lib/（db/auth/coze）、public/（前端单页）、sql/schema.sql、README.md（照着做的配置清单）
+
+## 实现备注
+- 扣子结束节点必须双输出：`recognition`（节点1识图结果）+ `diagnosis_result`（节点2诊断+计划），后端按这两个字段分别入库。
+- multer 用 2.x（1.x 有漏洞）。JWT 30 天有效期，bcryptjs 哈希。
+- 部署：Vercel 免费版 serverless 10 秒超时，扣子链路 30-60 秒必超时 → 前端 Vercel + 后端 Railway 分离部署，改 app.js 第一行 API 基址即可连通。
+- 验证期 /api/pay 是模拟支付，正式收费时替换为微信支付 V3，前端不用改。
+- **升级后必须重跑 sql/schema.sql**（幂等）。列表查询和回写依赖 summary/risk_level/goal_type 三列，缺列会导致历史页空白、首页档案 0 次、诊断结果不入库但额度照扣。
+- JWT payload 只放 user_id（JWT 是签名非加密，base64 可解，不放手机号）。
+- 注册与找回密码都绑定 invite_code：注册必填、重置时手机号+邀请码必须一致。上线前换短信验证码。
+- 扣子识图已修复（2026-09-18）：多图用 image1~image10（String，非必填），识图节点在**「视觉理解输入」**区域引用并改 Image 类型，**提示词里必须写 `{{image1}}` 引用**图片才进 prompt。判据：input token 随张数增长（1424→2838→5642）。
+- 前端三方库 CDN 一律用 BootCDN（jsdelivr 国内不稳）。移动端导出长图用 Web Share API + 全屏预览兜底，不用 a.download。
+- 报告导出：导出前自动展开全部周计划再恢复用户折叠状态；三码水印（左公众号/中程序码/右视频号）图片放 `public/qrcode-gzh.jpg`、`public/qrcode-sph-square.jpg`（视频号方形裁切版），不存在自动降级为纯程序码。**水印底色必须是纯色**——`linear-gradient` 会让 html2canvas 抛 `addColorStop: non-finite`，长图和 PDF 导出全废（2026-09-23 实测定位）。
+- 科普内容数据化：`public/learning.json`（科学跑步学习园地，6 分类 21 条），首页档案第 4 格入口，增删改只动 JSON 不改代码。
+- 项目目录已由 `健康跑程序` 改名为 `Healthy-run`（2026-09-21）。AI 已切 Dify 本地（8180），`npm start` 仍是 3000 端口。启动顺序：start-dify.bat（8180，AI 大脑）→ 跑悟（3000）→ 起名测名（3210）。
+- **启动架构已改为「一键启动」**（2026-09-22 核实）：`C:\Users\Lenovo\WorkBuddy\一键启动.bat` 编排 Dify(8180)+跑悟(3000)+起名测名(3210)，每服务一个独立 cmd 窗口（关窗口即停）。脚本第 0 步先 `pm2 delete health-app / as-naming` 清理隐藏实例，再 start 窗口。
+- **一键启动与 pm2 自启打架**：本机有计划任务「PM2 Resurrect OpenClaw」+ 启动目录 `boot-hidden.vbs`，pm2 daemon 重启会从 `~/.pm2/dump.pm2` resurrect 出 as-naming/health-app。脚本 delete 后 daemon 救回进程 → 抢端口死循环（health-app error log 是 `EADDRINUSE port 3000`，restarts 4388 次）。as-naming 因此从 3210 漂到 8080，一键启动探测到 8080 的 /api/health 通就误判"已在运行"跳过 → 用户看到"As-naming 没启动"。修复要二选一：全走 pm2 托管，或关掉 pm2 resurrect 自启。
+- **三个用户反馈已修**（2026-09-22）：① 报告页下拉"返回历史记录"消失——移动端顶栏换行成两行（~110px）盖住吸顶的 `.report-top`（top:58px/z-index40 < 顶栏 50）；修法是 `show()` 给 body 打 `has-backbar`（report/learn），移动端这两个页面顶栏改 static、返回栏 top:0。② 移动端边缘滑动直接退出——登录后压哨兵 history 记录，popstate 拦截弹确认框（`armBackGuard`/`disarmBackGuard` 在 setLogged/logout 调用，仅 isMobile）。③ 剩余 88 次仍提示次数不足——`/api/diagnose` 的 `if (!user || user.quota<=0)` 把**读取失败**误判为次数用完返回 402；改为读取失败返回 500、确凿 quota<=0 才 402。复现脚本 `dev-tests/quota-402-repro.js`。**后端改动需重启 3000 服务才生效。**
+
+## 2026-09-23 修复与调优（模型输出容错 + 耗时压缩）
+
+- **模型输出必须先过容错解析再做格式闸门**，两道缺一不可：
+  - `lib/model-json.js` 的 `parseModelJson()`（dify/coze 共用）：剥 `<think>`/围栏 → 取最外层 `{...}` → 去尾逗号 → **删"根对象提前闭合"的多余 `}`**。字符串感知扫描，引号内的 `}`/`,` 不误伤。回归用例 `dev-tests/model-json.test.js`。
+  - `api/index.js` 的 `pickDiagnosis()` 闸门：必须是含实际内容的对象，否则标 failed + **不扣次数** + 返回"请重新提交"。杜绝"提示生成成功、点开报异常、还白扣一次"。前端 `renderReport` 兜底文案不再出现具体平台名。
+- **Dify 侧慢的根因是 `reasoning_effort`**（实测，非猜测）：识图节点原**未设**（默认 max）、诊断节点 `high`。
+  改为 **`low`** 后同一份输入：识图 60.6s→12.7s、诊断计划 165.6s→79.2s、全链路 226.8s→**92.1s**。
+  诊断节点系统提示词"不要增减字段"与"备战模式需加 goal_feasibility/race_day_strategy"矛盾，
+  降思考强度后会丢字段，已消歧为「1) 基础字段」+「2) 备战模式额外字段」。实测方法与结论见《Dify工作流搭建手册.md》第九节。
+- 改 Dify 工作流：`GET/POST /console/api/apps/{id}/workflows/draft`，**POST 必须回传 GET 到的顶层 `hash`，否则 409 `draft_workflow_not_sync`**；改完要 `POST .../workflows/publish`，因为服务 API 跑的是已发布版本。草稿备份 `dev-tests/.dify-draft-backup-before-tuning.json`。
+- `cleanStalePending` 阈值 12→**20 分钟**（必须大于 dify.js 的 15 分钟硬超时，否则在跑的记录被中途误标失败并放行重复提交）；`/api/diagnose` 重复提交提示文案 `1-3 分钟` → `5-10 分钟`。
+- **沙箱黑名单拦住 `wscript`/`cscript`**（LOLBin），无法用 `run-hidden.vbs` 重启服务；node `spawn(detached)` 拉起的进程也会被会话清理。**重启 3000 服务最可靠的方式仍是让用户双击「一键启动.bat」**（bat 会健康检查并跳过在跑的 Dify）。WSL 同样被拦，不能用 psql 直连 Dify 库。
+- **`dev-tests/` 目录已归拢**（2026-09-23）：根目录只留活跃工具（30 个条目，含 21 个 js），79 个历史文件归入 `archive/{legacy-coze,dify-setup,db-oneoff,outputs}`，`README.md` 重写为按用途分组的索引。项目**非 git 仓库**且 `dev-tests/` 已在 `.gitignore`，删除无可回滚 → 清理一律**归档不删除**。归档内脚本相对路径引用（`../lib`）已失效，仅供查阅。
+- 不可移位/删除的依赖文件：`bad-diagnosis-v15.txt`（`model-json.test.js` 夹具）、`.ab-input.json`（`dify-ab-matrix.js` 的固定输入夹具，上轮归档时误移走导致断链，已从 `archive/outputs/` 复制回根）、`.dify-appkey.txt`/`.dify-cookie.txt`/`.dify-csrf.txt`（脚本按 `__dirname` 直读）、`.dify-admin-pwd.txt`（《Dify工作流搭建手册》引用）、`.dify-draft-backup-before-tuning.json` / `.dify-draft-backup-before-metrics.json`（草稿回滚）。
+
+## 思考强度档位（2026-09-23 同输入 A/B 实测，10 图全马）
+
+- **必须显式设 `reasoning_effort`，绝不留默认**（智谱 GLM 不设即 `max`，思考链吃光 `max_tokens` 导致输出截断：27395 字符全是未闭合 `<think>`、JSON 丢失）——这正是"等 5-10 分钟却提示报告数据异常"的成因。
+- **现行线上档位 = `high`**（2026-09-23 晚用户选择，两个节点都是）。改档唯一入口 `node dev-tests/dify-apply-reasoning.js <low|high|max>`（保存草稿+发布一步到位）。
+  high 档 10 图全链路一次实测 **~2.9 分钟**（识图 18.0s / 诊断 152.7s），诊断输出 14.6KB，解析后 5 条诊断 + `plan_8_weeks` 正好 8 周 + 每周 1 全休 2 力量，缺失措辞零命中。
+- ⚠️ **`dify-ab-matrix.js` 的收尾恢复已跟随线上档位**（原先写死恢复 low，会把生产悄悄降档）：改读 `PROD_EFFORT`，默认 `high`。
+- ⚠️ **耗时数字不要采信单次测量**（2026-09-23 晚反向复测推翻上一条）：正反两个顺序各跑一轮，**同档两次相差 2-4 倍，且两轮都是"后跑的更快"** → 单次被服务端排队/预热主导。曾记的"low 71s / high 148s、high 慢 77 秒"不成立。可稳定复现的只有：识图节点 high 更慢（18-19s→25-26s，输出体量 1.8-2.3KB→2.9-3.4KB）；high 诊断输出体量稳定大 2-3 倍。要比较档位必须多轮取中位数。
+- **识图质量与思考强度无关**：三档识图都只覆盖白名单 8 个字段、与真值一致率 7/8（high 反而把配速写成 `5.82`）。
+  视觉取数是感知任务不靠推理链。要提升识图覆盖，**只能改提示词 `metrics` 白名单**。
+- **high 的真实收益**：诊断多 1 项（交叉校验"填报周跑量 42km vs 截图加总 24.55km"）、8 周计划标注全休日；代价耗时 ×2.08。预算够可选。
+- **识图白名单短板（已于 2026-09-23 修复，见下节）**：截图里有触地时间 256ms、垂直振幅 8.5cm、左右触地平衡 50.2/49.8、步幅 89cm、最大摄氧量 46、有氧/无氧训练压力 3.4/2.1，但白名单不含 → 当时全部没提取。做跑姿综合分析必须先扩白名单 + 前端渲染新字段。
+- 提示词写"没出现的字段填 null"时，模型只理解成"图里没有"，不会去 `user_text` 取填报值（`weekly_volume_km` 三档全 null，尽管用户文字写了 42km）；要用填报值需在提示词里显式说明取值优先级。
+- low/high 都只给 1 次/周力量训练，未满足"力量训练每周 2 次"的项目规则 → **已在 2026-09-23 改成逐条自检的硬要求并实测达标**。
+- 复测工具：`dev-tests/dify-ab-matrix.js` + `dify-ab-compare.js`（结束自动恢复 `PROD_EFFORT`，默认 high），输入夹具 `dev-tests/.ab-input.json`。
+- Dify 控制台 cookie 约 2 小时过期（读草稿返回 `draft.graph = undefined`），先跑 `node dev-tests/dify-login.js` 刷新。
+
+## 跑姿指标扩展与识图输出契约（2026-09-23 实施并实测）
+
+- **识图 `metrics` 白名单：8 → 17 字段**。新增 `fastest_pace_min_per_km`（规则里一直要求提取最快配速，白名单却没这个位置 = 白读）、`avg_stride_cm`、`ground_contact_time_ms`、`vertical_oscillation_cm`、`ground_balance_left_pct`/`ground_balance_right_pct`、`vo2max`、`aerobic_training_effect`、`anaerobic_training_effect`。改动脚本 `dev-tests/dify-expand-metrics.js`（幂等，`--dry`/`--publish`）。
+- **多次跑步的契约必须写死**（只加白名单会回退）：一次传 10 张图 = 3 次跑步时，模型会把每次数据拆进 `runs[]`，**顶层 `metrics` 只剩周跑量** → 前端卡片读不到单次数据。契约：`metrics` **恒等于「日期最新那一次」**（单次指标唯一出口）；`runs` 为多次跑步的轻量摘要数组（date + 距离/配速/心率/步频，单次时 `[]`）。
+- **`weekly_volume_km` 必须消歧**：只填标注「本周/近 7 天」的值，只看到「累计跑量/总里程/本月」填 null。旧提示词拿累计值当周跑量，诊断会输出"填报 25km 但截图显示 54.53km，跑量前后不一致"这类**假问题**。
+- **训练规则改成硬要求**：诊断节点规则 4 由一句软描述改为逐条自检（周量递增 ≤10%、80/20、每周 runs 含 1 条「全休」、2 条「力量」且不得合并）。实测旧版 8 周里全休 0 周、力量有 1 周只 1 次；改后 8 周全达标。
+- **实测（10 图 = 3 次跑步，goal=none）**：识图 12.3s / 诊断 63.0s / 全链路 **75.6s**；metrics 非空 13/17（步幅 84cm、触地 298ms、垂直振幅 8.3cm、左右平衡 50.3-49.7）；诊断项变为跑姿驱动（垂直振幅偏高、触地偏长、左右平衡不均）。
+- **前端展示位**：报告页总评下方 `#card-metrics`「截图识别到的数据」，`RECOG_GROUPS` 分「基础数据/跑姿与体能」，左右触地平衡合并为 `.metric-chip.wide`（占两列防断行）；多次跑步时列「截图里包含 N 次跑步」。`formatPaceValue()` 兼容十进制分钟（5.82→5'49"）与已格式化字符串。全 null 不出卡。**改白名单字段名时必须同步改 `RECOG_GROUPS`。**
+- **前端验证的零副作用套路**：`dify-perf-probe.js` 取真实模型输出 → 自签 JWT 注入 `localStorage.token` 登录 → 浏览器里 `renderReport(真实 payload)` 走真实渲染路径 → 桌面 + iPhone-14 截图。不建记录、不扣额度。
+
+## 第二轮四项反馈（2026-09-23 晚）
+
+- **提示词禁止"喊缺数据"**：原原则 2「信息不足时就写"数据不足，建议补充 XX"」→ 改为「缺项就当它不存在、不得提及，只用已有数据分析；唯一例外 `image_type=unclear`」。识图补「部分字段读不到属正常，别判成 unclear」；前端诊断页 `metric-tip` 同步去掉相关文案。稀疏输入（单图、metrics 全 null）实测零命中缺失措辞。脚本 `dev-tests/dify-no-missing-hint.js`。
+- **JSON 字符串里的裸英文引号会让报告报废**（新故障类型，实测踩到）：模型照抄原话写成 `"…"前两个月中断"，…"`。双保险：提示词禁用字符串内英文双引号（用「」、配速写 `5'49`）+ `lib/model-json.js` 加"裸引号转义"（判据：字符串内 `"` 后紧跟 `, } ] :` 才算结束引号）。夹具 `dev-tests/bad-diagnosis-low-quotes.txt`。
+- **提示词三条防线不可丢**：① 缺项不得提及；② JSON 字符串值内禁英文双引号；③ `plan_8_weeks` 正好 8 项（稀疏输入实测冒出过 9 周）。改提示词后要同步《Dify工作流搭建手册.md》第十一节。
+- **导出 PDF 失效的真凶是水印渐变**（见上文"报告导出"条）：`captureReport` 抛 `addColorStop non-finite` → 长图与 PDF 双双失败。另修了形同虚设的画布高度闸门（`Math.max(1, …)` 让缩放永远 ≥1）。回归脚本 `dev-tests/export-verify.js`。
+- **顶栏「关注」入口**：`#btnFollow` + `#followModal`（公众号 + 视频号二维码），四页通用（顶栏是全局的）。顶栏布局从 `space-between` 改 `flex-start` + `.nav-links{margin-left:auto}`：桌面「品牌居左 / 导航+关注+账号右侧一簇」，手机端 `#btnFollow{margin-left:auto}` 顶到第一行右侧。**手机端顶栏必须保持两行 99px**——变三行会压住报告页/学习页的吸顶返回栏（本项目踩过的老坑）。
+- **视频号二维码原图是 1060×1377 竖版卡片**，塞方形位会被压扁（三码水印里一直被压）。`dev-tests/crop-sph-qr.js` 用"非白像素"判据（艺术二维码点线稀疏，深色判据会漏）框主体 718×722 → 裁 777×777 存为 `public/qrcode-sph-square.jpg`。
+- **关注弹窗的两个账号定位（2026-09-24 定稿，勿再用旧版）**：
+  - `<strong>公众号 · 产业路书</strong>` + `<span>作判断、讲方法、找路径</span>`
+  - `<strong>视频号 · 路远山高2049</strong>` + `<span>讲产业，也聊人生判断</span>`
+
+  **平台名与账号名必须同在一行（用户明确要求"放在一起、加深显示"）**，用 `.follow-item strong` 承载（13.5px/600/近黑）——
+  不要再退回"平台一行 + 账号名和定位挤在灰字里"的旧结构，那正是用户圈出来要改的地方。
+  简介控制在 **≤12 字**（实测 10 字 / 11.5px ≈ 115-127px，两栏各 1 行刚好对称）；视频号原文"也聊人生路上的判断"**删了"路上的"**才不折行。
+  历史废弃文案：「产业路书 · 干货长文」「路远山高2049 · 跑姿示范」「判断、方法与路径 / 讲产业，也讲人生」。
+- **诊断等待界面的时长口径统一为「3-5 分钟」**（2026-09-23，原为 5-10 分钟），5 处：`index.html` 的 `.loading-sub` / `.loading-note`、`app.js` 的超时提示与阶段兜底文案、`api/index.js` 的重复提交拦截。**前 4 处是静态文件刷新即生效，`api/index.js` 必须重启 3000 服务**。进度条打勾节奏 `stepTimes=[0,70s,200s]` **刻意没跟着收紧**（服务端排队 2-4 倍波动，宁可保守）。
+- **前端/导出验证不再依赖浏览器扩展**：`playwright-core` + 本机 Chrome 无头（`NODE_PATH` 指向托管 node workspace 的 node_modules）。三个坑：① 报告页渲染会拉趋势图，**无有效令牌会被 401 踢回登录页**（要自签真 token）；② 渲染后要等 `bootstrap()` 的 `/auth/me` 回来，否则它 `show('home')` 顶掉页面；③ `express.static` **不服务点号开头的文件**，临时夹具要用非点号名。
+
+## 法律合规外壳（上线前 · 2026-09-24 建立）
+
+- **主体必须写实名**：`public/legal/` 三份文本（terms / privacy / disclaimer + 共用 `legal.css`）的运营者一律署名**路玉宝**。
+  "产业路书"只是微信公众号账号名，不是法律主体，协议甲方/版权所有者/备案主体都不能写它。品牌名可并列（"跑悟 · AI 跑步诊断"）。
+- **同意机制两处，不要混在一起**：
+  注册页 `#agreeTerms`（同意《用户协议》+《隐私政策》+ 数据出境）——仅注册模式显示，`switchAuth()` 控制；
+  诊断页第 1 步 `#consentHealth`（**敏感个人信息单独同意**，PIPL 第 29 条要求独立勾选框）——勾过记 `localStorage.consentHealth`，避免每次重复勾导致授权走过场。
+  两处都不设默认勾选（默认勾选在法律上等于没取得同意）。js 里 `input[type="checkbox"]` 必须显式覆盖 `.auth-form input` 的 11px 内边距，否则 checkbox 被撑成大块。
+- **数据出境是既定事实，已如实披露**：Supabase 在境外（存账号、诊断记录、图片），智谱 GLM 在境内（处理图片与文字）。隐私政策第四节列了接收方清单并单列"个人信息出境"条款。
+  **根治办法是把数据库迁回境内**，上线前必须决策——个人无法完成出境的合规路径。
+- **页脚 `.site-foot`** 是全局的（版权行 + 三份文本入口 + 微信 yblu1996）。移动端底部导航是 fixed，页脚 `padding-bottom: 86px` 是刻意避让，不是多余。
+- **ICP 备案号在 4 个文件里留了 HTML 注释占位**（`public/index.html` + 三份 legal 页），注释里的 `京ICP备XXXXXXXX号` 是占位符**不是真号**，备案完成后替换，链接必须指向工信部官网。
+- ⚠️ **个人 ICP 备案不得从事经营性活动**（不能收费）。9.9 元/次一旦正式收费，需企业主体备案 + 相应资质，这是从内测转正式上线前绕不过去的一道。
+
+### 账号注销与数据导出（B 组，2026-09-24）
+
+- **两条路由**：`GET /api/account/export`（打包 users/run_records/orders/feedback 为 JSON，**不交付
+  `password_hash`/`security_answer_hash`**）、`DELETE /api/account`（三确认：密码 + 手输「注销」+ 前端确认框）。
+  入口在**首页「我的档案」下方的「账号与数据」区块**（`.acct-card`），不是页脚、不是顶栏。
+- **删除顺序不可颠倒：先清存储桶，再删数据库**。图片只按 `user_id/` 前缀存放，一旦 users 行删掉、
+  run_records 被级联清空，就再没有线索知道该用户传过哪些图 → 只剩清不掉的孤儿文件。
+  存储删除失败要 500 中止，不能留"半注销"。
+- **`feedback.user_id` 外键是 `on delete set null`**，不会随用户删掉，必须显式 delete，
+  否则用户反馈会以匿名形式留在库里。接真实支付后 `orders` 要改成匿名化保留（代码注释已标）。
+- **文件落地策略**：桌面走 `a.download`，**只在触屏端**才走 Web Share。桌面 Chrome 的
+  `navigator.canShare({files})` 也为真，无脑 share-first 会让桌面用户弹分享面板而不是存文件；
+  share 失败（非用户取消）必须退回下载，否则文件直接丢掉。
+- **限流桶是进程内存的**：同实例连跑两轮测试会被上轮残留计数打成 429，流程中段整片失败且看似无规律。
+  重跑前先杀实例再起。
+- **Supabase 存储公共 URL 走 CDN**：文件删掉后 URL 仍可能返 200（旧缓存）。断言要用 `?cb=<时间戳>` 绕缓存，
+  并以 `storage.list(prefix)` 为准。**合规含义：注销后图片在 CDN 缓存期内仍可能被访问**。
+- **测后端改动别动用户正在跑的 3000**：另起 `PORT=3010` 实例测（dotenv 不覆盖已有环境变量，故 PORT 生效），
+  测完杀掉。回归脚本 `account-delete-verify.js`（28 项）+ `.shot-account.js`（15 项）。
+- **页脚备案占位已含公安网备**（开通后 30 日内、页脚展示备案号并链 beian.mps.gov.cn），
+  四个文件里都是 HTML 注释，备案下来替换。
+- **前端混淆（B 组第 9 项）尚未做**：本项目是无构建的静态前端，压缩会剥掉那些有价值的注释、
+  且防抄袭实际收益低（真正的 IP 是服务端提示词）。要做就得引入构建产物，待用户决定。
+
+## 数据出境与迁回境内（评估结论 · 2026-09-24 定，勿再重复论证）
+
+详见《数据出境与迁回境内评估.md》。**三句话结论**：
+1. **出境事实成立且无豁免**：Supabase 在境外存账号/诊断/跑步图片。跑悟的数据构成**敏感个人信息**（① 因为输出"健康评估性质"内容——GB/T 45574 的"基本体质信息非遗敏感"注释有一条除外条款：经算法形成疾病诊断/健康评估/医疗建议输出即按医疗健康信息对待；② 跑姿照片含**步态**，属生物识别）。《促进和规范数据跨境流动规定》第五条豁免原文写明"**不含敏感个人信息**"→ **无人数下限，1 个人也要合规**。
+2. **三条出境路径实操全堵死**，卡点在**境外接收方不配合**（标准合同须用网信办范本 + 境外方接受中国管辖，Supabase 不会签；认证同理）。**所以迁回境内是唯一可行解**，不是优选解。
+3. **真正的代价不在技术，在主体**：迁回境内 ⇒ 强制 ICP 备案 ⇒ 撞《互联网信息服务管理办法》第 3/4/7 条，**个人备案不得经营性，收费须 ICP 经营许可证（须内资公司）**。**"数据出境 / ICP备案收费 / 微信小程序收款"三个问题收敛成同一个前提：注册经营主体。** 微信小程序个人主体另外**开不了支付商户号、不支持 web-view、医疗类目禁选**，且**主体类型选定后不可变更**——"先用个人主体试水"是不可逆错误。
+
+**技术迁移面（可省探索时间）**：`lib/db.js` 仅 13 行；`api/index.js` 34 处 `.from()` + 4 处 storage + 1 处 `PUBLIC_PREFIX`；**`sql/schema.sql` 零改动**（标准 PG，**故选 PostgreSQL 不选 MySQL**）；auth 是自研 JWT，**不碰 Supabase Auth**。存量图片 URL 存在 `run_records.images` JSONB 里，搬迁需改写。
+**选型**：轻量服务器 + 自建 PG + COS（推荐）；自托管 Supabase 代码改动最小但 10+ 容器运维太重；**WorkBuddy 内置云服务与本项目架构冲突**（它以前端+publishableKey+Origin 为中心，不给自建后端 service-role）。Dify 去处要一并决定。
+
+**遗留待办**：
+- ✅ **年龄门槛已修（2026-09-24）**：`public/index.html` 的 `mAge` 由 `min="6"` 改 **14**，`api/index.js` 加后端兜底 `MIN_AGE=14` / `MAX_AGE=100`（绕过前端也会被拒）。14 这个值是与《隐私政策》第八节"不满 14 周岁的儿童不要注册使用"对齐的，改前先看一眼那里。若更保守，两处一起调 18。
+- ✅ **图片已私有化（2026-09-24）**：桶 `run-images` 由 `public: true` 改 **`public: false`**；上传接口改返回**签名 URL**（`SIGNED_URL_TTL` 默认 1 小时）；`run_records.images` 由完整 URL 改为存**对象路径**（`<user_id>/<文件名>`）；诊断前用 `signImagePaths()` 现签给 Dify。存量 174 条公开 URL 已随 `storage-privatize.js --apply` 改写。
+- 红线：迁回境内后**模型必须境内**（智谱 ✓；早期扣子 coze.com 是境外，不可回退）。
+
+## 图片存储链路（私有桶 + 签名 URL，2026-09-24 定）
+
+- **形态**：桶 `run-images` 为**私有**；`/api/upload` 返回**签名 URL**（`SIGNED_URL_TTL`，默认 3600s）；
+  `run_records.images` 存**对象路径**（`<user_id>/<文件名>`）而非完整 URL；`/api/diagnose` 用
+  `imageObjectPath()` 解析路径并**校验必须落在本人 `user_id/` 目录下**（旧代码只校验桶前缀，不校验归属，
+  塞别人的图也能过），再用 `signImagePaths()` 现签给 Dify（`remote_url` 拉取）。
+- **前端不展示用户上传的图片**（只用本地上传后的预览网格），所以私有化对页面零影响。
+  真正唯一的消费方是 Dify 拉图——`dev-tests/dify-image-access-probe.js` 对照实验已证明
+  **签名 URL 与公开 URL 的识图结果完全一致**。
+- **判"识图有没有读到图"要看 `image_type`，绝不能看指标条数**：拉取失败时是 `unclear`；
+  而单图/总览类截图本来就可能 17 个指标全为空（同一张图在公开与签名 URL 下都是 0 项）。
+  曾因拿"条数>0"当判据，误报过一次失败。
+- **存量数据**：迁移后 `images` 全是路径。测试脚本与 A/B 夹具里若还留着旧公开 URL，**必须先重新签名**
+  （`dify-ab-matrix.js` 已内置 `freshImageUrls()`），否则识图静默拿到空图、结论全错却不报错。
+- **改桶属性/后端代码后必须重启 3000**（无热重载）。用户重启方式：关掉跑悟窗口 → 双击 `一键启动.bat`。

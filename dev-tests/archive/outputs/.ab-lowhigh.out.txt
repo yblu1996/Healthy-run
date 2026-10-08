@@ -1,0 +1,51 @@
+
+========== 档位 low ==========
+vision_1 → {"temperature":0,"reasoning_effort":"low"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"low"}
+保存草稿 → 200 {"result":"success","hash":"4e66b493663dff42bc7135cae2eac7b0ea0c851cc530c0775aea9e6169b37747","updated_at":1790173906}
+
+发布 → 200 {"result":"success","created_at":1790173906}
+
+----- [low] 0.0s 发起 streaming，图 10 张，goal=full_marathon
+[4.9s] ▶ 开始
+[4.9s] ■ 开始 elapsed=0.0s 输出6490B
+[5.0s] ▶ 识图
+[23.0s] ■ 识图 elapsed=18.0s 输出1807B
+[23.1s] ▶ 诊断计划
+[103.5s] ■ 诊断计划 elapsed=80.4s 输出7945B
+[103.5s] ▶ 结束
+[103.5s] ■ 结束 elapsed=0.0s 输出8941B
+[103.5s] ⛳ 结束 status=succeeded 总耗时=98.610451s
+[落盘] .ab-low.json（总耗时 98.610451s）
+
+========== 档位 high ==========
+vision_1 → {"temperature":0,"reasoning_effort":"high"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"high"}
+保存草稿 → 200 {"result":"success","hash":"116e0b6f70040e63e34ba4d6c29df8f5b5b4bc05c975c85f099d1dde80b3b43e","updated_at":1790174011}
+
+发布 → 200 {"result":"success","created_at":1790174011}
+
+----- [high] 0.0s 发起 streaming，图 10 张，goal=full_marathon
+[2.4s] ▶ 开始
+[2.4s] ■ 开始 elapsed=0.0s 输出6490B
+[2.4s] ▶ 识图
+[28.6s] ■ 识图 elapsed=26.1s 输出2932B
+[28.7s] ▶ 诊断计划
+[69.9s] ■ 诊断计划 elapsed=41.2s 输出11808B
+[69.9s] ▶ 结束
+[69.9s] ■ 结束 elapsed=0.0s 输出13925B
+[69.9s] ⛳ 结束 status=succeeded 总耗时=67.547639s
+[落盘] .ab-high.json（总耗时 67.547639s）
+
+恢复线上配置为 low ...
+vision_1 → {"temperature":0,"reasoning_effort":"low"}
+diag_1 → {"max_tokens":9901,"reasoning_effort":"low"}
+保存草稿 → 200 {"result":"success","hash":"4e66b493663dff42bc7135cae2eac7b0ea0c851cc530c0775aea9e6169b37747","updated_at":1790174082}
+
+发布 → 200 {"result":"success","created_at":1790174082}
+
+
+========== 汇总 ==========
+low   总计 98.610451s | 开始=0.00078s/6490B  识图=18.033881s/1807B  诊断计划=80.373259s/7945B  结束=0.000106s/8941B
+high  总计 67.547639s | 开始=0.00064s/6490B  识图=26.136879s/2932B  诊断计划=41.188847s/11808B  结束=0.000057s/13925B
+max   未测
