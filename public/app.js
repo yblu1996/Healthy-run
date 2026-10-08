@@ -716,7 +716,7 @@ async function openRecord(id) {
     renderReport({
       diagnosis_result: record.diagnosis,
       recognition: record.recognition || null,
-      meta: { created_at: record.created_at, is_latest: is_latest !== false, superseded_at: superseded_at || null },
+      meta: { created_at: record.created_at, is_latest: is_latest !== false, superseded_at: superseded_at || null, goal: record.goal },
     });
     show('report');
   } catch (err) {
@@ -1244,7 +1244,7 @@ $('#diagnoseForm').addEventListener('submit', async (e) => {
     $('#userText').value = '';
     $('#mSafetyStatus').value = 'unknown';
     showWizStep(1);
-    renderReport({ ...result, recognition: recognition || result.recognition || null });
+    renderReport({ ...result, recognition: recognition || result.recognition || null, meta: { goal: $('#goal').value } });
     show('report');
     showToast('报告已保存至历史记录');
     // 配额刷新独立于主 try：诊断已经成功，刷新失败不该把用户吓成"以为白跑一次"
@@ -1354,6 +1354,16 @@ $('#feedbackForm').addEventListener('submit', async (e) => {
     btn.disabled = false;
     btn.textContent = '提交反馈';
   }
+});
+
+// ---------- 账号与安全折叠面板 ----------
+$('#accountSafetyToggle').addEventListener('click', () => {
+  const panel = $('#accountSafetyToggle').closest('.as-panel');
+  const body = $('#accountSafetyBody');
+  const open = body.classList.toggle('hidden') === false;
+  panel.classList.toggle('open', open);
+  $('#accountSafetyToggle').setAttribute('aria-expanded', String(open));
+  $('#accountSafetyHint').textContent = open ? '收起' : '点开管理';
 });
 
 // ---------- 密保问题：状态显示 + 补设/更换 ----------
@@ -1719,7 +1729,15 @@ function renderReport(payload) {
   const plan = Array.isArray(d.plan_8_weeks) ? d.plan_8_weeks : (Array.isArray(d.training_plan) ? d.training_plan : []);
   const progress = d.progress || null;
   const issues = Array.isArray(d.diagnosis) ? d.diagnosis : [];
-  const goalFz = d.goal_feasibility || null;
+  // 目标可行性：提示词让模型输出一段文字（字符串），历史版本曾输出对象
+  // {assessment, concerns, milestone}——两种形式都兼容，字符串是主路径
+  const goalFzRaw = d.goal_feasibility;
+  let goalFz = null;
+  if (typeof goalFzRaw === 'string' && goalFzRaw.trim()) {
+    goalFz = { assessment: goalFzRaw.trim(), concerns: null, milestone: null };
+  } else if (goalFzRaw && typeof goalFzRaw === 'object' && !Array.isArray(goalFzRaw)) {
+    goalFz = goalFzRaw;
+  }
   const hasProgress = progress && (progress.improved || progress.regressed || progress.prev_plan_completion);
 
   // 红线通栏
@@ -1796,8 +1814,10 @@ function renderReport(payload) {
 
   if (goalFz) {
     const concerns = Array.isArray(goalFz.concerns) ? goalFz.concerns.filter(Boolean).join('；') : (goalFz.concerns || '');
+    // 标题带出诊断时设定的目标，用户一眼知道这段评估针对的是什么
+    const goalLabel = (payload.meta && payload.meta.goal) ? ' ' + goalBadge(payload.meta.goal) : '';
     html.push(`<div class="report-card" id="card-goal">
-      <h3>目标评估</h3>
+      <h3>目标评估${goalLabel}</h3>
       <p style="font-size:14px;margin-bottom:8px">${esc(goalFz.assessment || '—')}</p>
       ${concerns ? `<p class="issue-evidence">风险点：${esc(concerns)}</p>` : ''}
       ${goalFz.milestone ? `<p class="issue-advice">关键里程碑：${esc(goalFz.milestone)}</p>` : ''}

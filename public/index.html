@@ -137,18 +137,23 @@
       <div id="planWeekDetail" class="plan-week-detail"></div>
     </div>
 
-    <!-- 密保问题：老账号（密保字段上线前注册）可在此补设；忘答的也可更换 -->
-    <h3 class="section-title">密保问题</h3>
-    <p class="section-desc">密保答案用于日后自助找回密码，未设置的账号无法自助重置密码。</p>
-    <div class="acct-card">
-      <div class="acct-row">
-        <div class="acct-text">
-          <strong id="secqStatusText">检查中…</strong>
-          <span id="secqStatusHint"></span>
-        </div>
-      </div>
-      <div class="acct-row">
-        <div class="acct-text">
+    <!-- 账号与安全：密保 / 修改密码 / 数据与注销 整合为一个折叠模块，点开才展开，
+         避免三个孤立卡片平铺在首页底部；各子块独立成盒 -->
+    <h3 class="section-title">账号与安全</h3>
+    <p class="section-desc">密保、密码、数据导出与账号注销收在一起，需要时点开操作。</p>
+    <div class="acct-card as-panel">
+      <button type="button" class="as-toggle" id="accountSafetyToggle" aria-expanded="false" aria-controls="accountSafetyBody">
+        <span class="as-toggle-title">🔐 密保 · 密码 · 数据管理</span>
+        <span class="as-toggle-hint" id="accountSafetyHint">点开管理</span>
+      </button>
+      <div id="accountSafetyBody" class="hidden">
+
+        <section class="as-box">
+          <div class="as-box-head">
+            <h4>密保问题</h4>
+            <span class="as-status" id="secqStatusText">检查中…</span>
+          </div>
+          <p class="as-desc" id="secqStatusHint">密保答案用于日后自助找回密码，未设置的账号无法自助重置密码。</p>
           <label class="secq-field">密保问题
             <select id="acctSecQuestion">
               <option value="">请选择一个密保问题</option>
@@ -165,17 +170,12 @@
           <label class="secq-field">当前密码（确认是本人操作）
             <input id="acctSecPassword" type="password" autocomplete="current-password" placeholder="输入现在的登录密码">
           </label>
-        </div>
-        <button class="btn-ghost" id="btnSaveSecq">保存密保</button>
-      </div>
-    </div>
+          <button class="btn-ghost as-btn" id="btnSaveSecq">保存密保</button>
+        </section>
 
-    <!-- 修改密码：弱密码提醒（纯数字/过短）的承接入口，也可日常主动更换 -->
-    <h3 class="section-title">修改密码</h3>
-    <p class="section-desc">密码建议 8 位以上并混合字母与数字，纯数字密码容易被猜到。</p>
-    <div class="acct-card">
-      <div class="acct-row">
-        <div class="acct-text">
+        <section class="as-box">
+          <div class="as-box-head"><h4>修改密码</h4></div>
+          <p class="as-desc">建议 8 位以上并混合字母与数字，纯数字密码容易被猜到。</p>
           <label class="secq-field">当前密码
             <input id="chpwCurrent" type="password" autocomplete="current-password" placeholder="输入现在的登录密码">
           </label>
@@ -185,28 +185,28 @@
           <label class="secq-field">确认新密码
             <input id="chpwConfirm" type="password" autocomplete="new-password" placeholder="再输入一次新密码">
           </label>
-        </div>
-        <button class="btn-ghost" id="btnChangePassword">修改密码</button>
-      </div>
-    </div>
+          <button class="btn-ghost as-btn" id="btnChangePassword">修改密码</button>
+        </section>
 
-    <!-- 账号与数据：导出（可携带权）与注销（删除权）。按法律要求做成自助入口，不能只写"联系客服" -->
-    <h3 class="section-title">账号与数据</h3>
-    <p class="section-desc">你的诊断记录随时可以带走，也可以随时连同账号一起删除。</p>
-    <div class="acct-card">
-      <div class="acct-row">
-        <div class="acct-text">
-          <strong>导出我的数据</strong>
-          <span>把账号信息、全部诊断记录与训练计划打包成一份文件下载到本地</span>
-        </div>
-        <button class="btn-ghost" id="btnExportData">导出</button>
-      </div>
-      <div class="acct-row">
-        <div class="acct-text">
-          <strong>注销账号</strong>
-          <span>永久删除账号、诊断记录与上传的图片，此操作不可恢复</span>
-        </div>
-        <button class="btn-danger-ghost" id="btnDeleteAccount">注销</button>
+        <!-- 导出（可携带权）与注销（删除权）：按法律要求做成自助入口，不能只写"联系客服" -->
+        <section class="as-box">
+          <div class="as-box-head"><h4>数据与账号</h4></div>
+          <div class="acct-row">
+            <div class="acct-text">
+              <strong>导出我的数据</strong>
+              <span>账号信息、全部诊断记录与训练计划打包下载到本地</span>
+            </div>
+            <button class="btn-ghost" id="btnExportData">导出</button>
+          </div>
+          <div class="acct-row">
+            <div class="acct-text">
+              <strong>注销账号</strong>
+              <span>永久删除账号、诊断记录与上传的图片，不可恢复</span>
+            </div>
+            <button class="btn-danger-ghost" id="btnDeleteAccount">注销</button>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>

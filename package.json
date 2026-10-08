@@ -20,5 +20,8 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.0"
   }
 }

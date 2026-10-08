@@ -293,37 +293,50 @@ body {
 .learn-img { max-width: 100%; border-radius: 8px; margin: 10px 0 0; }
 /* 动作示意动图（原创 SVG 动画）：桌面两列、手机单列 */
 .learn-credit { font-size: 12px; color: var(--text-secondary); background: var(--card); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 12px; margin: 0 0 14px; }
-.learn-media { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; margin: 12px 0 8px; }
-.learn-fig { margin: 0; }
-.learn-fig img { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: block; margin: 0; }
+/* 动作卡片栅格：手机端完全不用 grid（微信 X5/XWeb 老内核对 grid/auto-fit 支持不完整，
+   曾把多张卡片挤进一行并盖住要点文字）——窄屏一律块级流式排版（块级元素不可能重叠），
+   每张卡片独占一行、内部参考照与动画上下堆叠；仅 ≥680px 的现代环境才用双列网格 */
+.learn-media { display: block; margin: 12px 0 8px; }
+.learn-fig { margin: 0 0 14px; max-width: 100%; }
+.learn-fig:last-child { margin-bottom: 0; }
+.learn-fig img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: block; margin: 0; }
+/* 双列仅给宽屏；minmax(0,1fr) 防内容撑爆 */
+@media (min-width: 680px) {
+  .learn-media { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .learn-fig { margin-bottom: 0; }
+}
 .learn-fig figcaption { font-size: 12px; color: var(--text-secondary); margin-top: 5px; line-height: 1.6; }
 /* 动作示意卡片：标题 + 参考照 + 动画 + 要点，整体成块、与相邻内容区分 */
 .fig-card { background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--teal); border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 6px rgba(31, 36, 33, 0.05); }
 .fig-head { margin-bottom: 8px; }
 .fig-title { font-size: 15.5px; font-weight: 700; color: var(--teal-dark); line-height: 1.4; }
 .fig-cap { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.6; }
-/* 真人参考照 + 原创动画 并排：桌面两列、窄屏单列；标签放图片下方，不遮挡内容 */
-.fig-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; margin-top: 4px; }
-.fig-pair-cell { position: relative; min-width: 0; }
+/* 真人参考照 + 原创动画：宽屏两列并排，窄屏块级上下堆叠（同 .learn-media 的理由，
+   手机端不依赖 grid）；标签放图片下方，不遮挡内容 */
+.fig-pair { display: block; margin-top: 4px; }
+.fig-pair-cell { position: relative; min-width: 0; max-width: 100%; margin-bottom: 10px; }
+.fig-pair-cell:last-child { margin-bottom: 0; }
 .fig-pair-cell .learn-img { width: 100%; height: auto; aspect-ratio: 320 / 200; object-fit: cover; margin: 0; }
-.learn-zoom-trigger { display: block; width: 100%; padding: 0; border: 0; border-radius: 10px; background: transparent; cursor: zoom-in; text-align: left; }
-.learn-zoom-trigger .learn-img { display: block; width: 100%; margin: 0; border: 1px solid var(--border); border-radius: 10px; background: #F8FBF9; transition: border-color .18s, box-shadow .18s; }
+.learn-zoom-trigger { display: block; width: 100%; max-width: 100%; padding: 0; border: 0; border-radius: 10px; background: transparent; cursor: zoom-in; text-align: left; }
+.learn-zoom-trigger .learn-img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0; border: 1px solid var(--border); border-radius: 10px; background: #F8FBF9; transition: border-color .18s, box-shadow .18s; }
 .learn-zoom-trigger:hover .learn-img,
 .learn-zoom-trigger:focus-visible .learn-img { border-color: var(--teal); box-shadow: 0 3px 14px rgba(15, 110, 86, .12); }
 .fig-tag { margin-top: 5px; display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--text-secondary); background: var(--bg); border: 1px solid var(--border); padding: 1.5px 9px; border-radius: 999px; }
 .fig-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
 .fig-tag-anim { color: var(--teal-dark); background: var(--teal-light); border-color: transparent; }
 .fig-tag-anim::before { background: var(--teal); }
-@media (max-width: 560px) {
-  .fig-pair { grid-template-columns: 1fr; }
+@media (min-width: 680px) {
+  .fig-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+  .fig-pair-cell { margin-bottom: 0; }
 }
 /* 参考图占位：暂无正确照片时的标记 */
 .fig-pending { width: 100%; height: auto; aspect-ratio: 320 / 200; border: 1.5px dashed var(--border); border-radius: 10px; background: repeating-linear-gradient(45deg, #FAFCFB, #FAFCFB 10px, #F2F7F4 10px, #F2F7F4 20px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: 8px; box-sizing: border-box; }
 .fig-pending-icon { font-size: 20px; opacity: 0.55; }
 .fig-pending b { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
 .fig-pending i { font-size: 10.5px; color: var(--text-tertiary); font-style: normal; }
-/* 动图功能卡：学名 / 功效 / 目标肌肉 / 注意事项 */
-.fig-info { margin-top: 8px; background: rgba(47, 143, 107, 0.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; display: grid; gap: 7px; }
+/* 动图功能卡：学名 / 功效 / 目标肌肉 / 注意事项（块级+margin，不依赖 grid gap） */
+.fig-info { margin-top: 8px; background: rgba(47, 143, 107, 0.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.fig-info .fig-row + .fig-row, .fig-info .fig-term + .fig-row { margin-top: 7px; }
 .fig-term { justify-self: start; font-size: 11.5px; font-weight: 600; color: var(--teal); background: var(--teal-light); padding: 2.5px 10px; border-radius: 999px; }
 .fig-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.65; }
 .fig-k { flex: none; width: 36px; text-align: center; font-size: 11px; font-weight: 600; color: var(--teal); background: rgba(47, 143, 107, 0.12); border-radius: 6px; padding: 2px 0; margin-top: 1px; }
@@ -618,9 +631,11 @@ body {
 /* 报告页「截图识别到的数据」：识图节点读到的指标，分「基础数据 / 跑姿与体能」两组 */
 .metric-group + .metric-group { margin-top: 14px; }
 .metric-group h4 { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; }
-.metric-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
-.metric-chip { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; }
-.metric-chip.wide { grid-column: span 2; }
+/* 指标小卡：flex 换行 + margin 间距（不用 auto-fill grid——老内核会把小卡挤叠在一起），
+   基础卡固定最小宽度，长内容自动换行 */
+.metric-chips { display: flex; flex-wrap: wrap; }
+.metric-chip { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; margin: 0 10px 10px 0; min-width: 104px; max-width: 100%; flex: 0 1 auto; box-sizing: border-box; }
+.metric-chip.wide { flex: 1 1 100%; margin-right: 0; }
 .metric-chip .mc-label { display: block; font-size: 12px; color: var(--text-secondary); }
 .metric-chip .mc-value { display: block; font-size: 17px; font-weight: 600; margin-top: 2px; line-height: 1.35; overflow-wrap: break-word; }
 .metric-chip .mc-value em { font-style: normal; font-size: 12px; font-weight: 400; color: var(--text-tertiary); margin-left: 2px; }
@@ -689,6 +704,35 @@ body {
   font-size: 14px; background: var(--card); color: var(--text); outline: none; font-family: inherit;
 }
 .secq-field select:focus, .secq-field input:focus { border-color: var(--teal); }
+
+/* 账号与安全折叠模块：首页底部三块（密保/改密/数据注销）收进一个面板，
+   点开才展开；每个子块独立成盒，视觉上自成整体 */
+.as-panel { padding: 0; overflow: hidden; }
+.as-toggle {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 16px 18px; border: 0; background: transparent; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: var(--text); text-align: left; font-family: inherit;
+}
+.as-toggle-title { display: inline-flex; align-items: center; gap: 6px; }
+.as-toggle-hint { font-size: 12px; font-weight: 400; color: var(--teal); flex: none; }
+.as-panel.open .as-toggle { border-bottom: 1px solid var(--border); }
+.as-panel.open .as-toggle-hint::after { content: ''; }
+#accountSafetyBody { padding: 14px; }
+#accountSafetyBody.hidden { display: none; }
+#accountSafetyBody > .as-box + .as-box { margin-top: 14px; }
+.as-box {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px; background: var(--bg);
+}
+.as-box > * + * { margin-top: 8px; }
+.as-box .secq-field { margin-bottom: 0; }
+.as-box-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.as-box-head h4 { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--teal-dark); }
+.as-status { font-size: 12px; font-weight: 600; color: var(--text-secondary); background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; }
+.as-desc { margin: 0; font-size: 12.5px; color: var(--text-tertiary); line-height: 1.6; }
+.as-btn { width: 100%; margin-top: 4px; }
+.as-box .acct-row { margin: 0; padding: 10px 0; }
+.as-box .acct-row + .acct-row { border-top: 1px dashed var(--border); }
 #secqStatusText { display: block; }
 #secqStatusHint { color: var(--text-tertiary); }
 /* 弱密码提示：跟随注册/重置的密码输入实时显示 */
